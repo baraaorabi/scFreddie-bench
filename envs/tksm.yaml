@@ -1,0 +1,21 @@
+name: tksm
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - snakemake>=7.0.0
+  - python-edlib
+  - numpy
+  - matplotlib
+  - joblib
+  - tqdm
+  - pandas
+  - scikit-learn
+  - badread=0.2.0
+  - sctagger=1.1.1
+  - minimap2
+  - gxx=12.2.0
+  - fmt=9.1.0
+  - cxxopts=3.1.0
+  - nlohmann_json=3.11.2

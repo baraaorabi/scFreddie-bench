@@ -1,0 +1,12 @@
+[submodule "extern/tksm"]
+	path = extern/tksm
+	url = https://github.com/vpc-ccg/tksm
+[submodule "extern/freddie"]
+	path = extern/freddie
+	url = https://github.com/baraaorabi/freddie-sc
+[submodule "extern/scNanoGPS"]
+	path = extern/scNanoGPS
+	url = https://github.com/gaolabtools/scNanoGPS
+[submodule "extern/FLAMES"]
+	path = extern/FLAMES
+	url = https://github.com/LuyiTian/FLAMES

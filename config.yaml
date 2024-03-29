@@ -1,205 +1,162 @@
-outpath: output/simulate
-enable_piping: false
-# Pipeline modules
-
-TS_experiments:
-    # C1:
-    #     pipeline:
-    #         - Tsb:
-    #               params: "--molecule-count 100000 --molecule-prefix C1: -s 41"
-    #               model: A549
-    # C2:
-    #     pipeline:
-    #         - Tsb:
-    #               params: "--molecule-count 100000 --molecule-prefix C2: -s 42"
-    #               model: Hct116
-    # C3:
-    #     pipeline:
-    #         - Tsb:
-    #               params: "--molecule-count 100000 --molecule-prefix C3: -s 43"
-    #               model: HepG2
-    # C4:
-    #     pipeline:
-    #         - Tsb:
-    #               params: "--molecule-count 100000 --molecule-prefix C4: -s 44"
-    #               model: K562
-    # C5:
-    #     pipeline:
-    #         - Tsb:
-    #               params: "--molecule-count 100000 --molecule-prefix C5: -s 45"
-    #               model: MCF7
-    # S1:
-    #     pipeline:
-    #         - Mrg:
-    #               sources: ["C1", "C2", "C3", "C4", "C5"]
-    #         - plA:
-    #               params: "--normal=15,7.5"
-    #         - Trc:
-    #               params: ""
-    #               model: MCF7
-    #         - Tag:
-    #               params: "--format3 10"
-    #         - SCB:
-    #               params: ""
-    #         - Tag:
-    #               params: "--format3 AGATCGGAAGAGCGTCGTGTAG"
-    #         - PCR:
-    #               params: "--cycles 5 --molecule-count 5000000 -x Taq-setting1"
-    #         - Flp:
-    #               params: "-p 0.5"
-    #         - Tag:
-    #               params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
-    #         - Shf:
-    #               params: ""
-    #         - Seq:
-    #               params: "--skip-qual-compute"
-    C1_chr21:
-        pipeline:
-            - Tsb:
-                  params: "--molecule-count 100000 --molecule-prefix C1: -s 41"
-                  model: A549_chr21
-    C2_chr21:
-        pipeline:
-            - Tsb:
-                  params: "--molecule-count 100000 --molecule-prefix C2: -s 42"
-                  model: Hct116_chr21
-    C3_chr21:
-        pipeline:
-            - Tsb:
-                  params: "--molecule-count 100000 --molecule-prefix C3: -s 43"
-                  model: HepG2_chr21
-    C4_chr21:
-        pipeline:
-            - Tsb:
-                  params: "--molecule-count 100000 --molecule-prefix C4: -s 44"
-                  model: K562_chr21
-    C5_chr21:
-        pipeline:
-            - Tsb:
-                  params: "--molecule-count 100000 --molecule-prefix C5: -s 45"
-                  model: MCF7_chr21
-    S1_chr21:
-        pipeline:
-            - Mrg:
-                  sources: ["C1_chr21", "C2_chr21", "C3_chr21", "C4_chr21", "C5_chr21"]
-            - plA:
-                  params: "--normal=15,7.5"
-            - Trc:
-                  params: ""
-                  model: MCF7_chr21
-            - Tag:
-                  params: "--format3 10"
-            - SCB:
-                  params: ""
-            - Tag:
-                  params: "--format3 AGATCGGAAGAGCGTCGTGTAG"
-            - PCR:
-                  params: "--cycles 5 --molecule-count 5000000 -x Taq-setting1"
-            - Flp:
-                  params: "-p 0.5"
-            - Tag:
-                  params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
-            - Shf:
-                  params: ""
-            - Seq:
-                  params: "--skip-qual-compute"
+outpath: output
 
 exec:
-    tksm: tksm
+    freddie: extern/freddie/freddie.py
+    rname_to_celltypes: py/rname_to_celltypes.py
 
-refs:
-    Homo_sapiens:
-        GTF: data/refs/homo_sapiens.annot.gtf
-        DNA: data/refs/homo_sapiens.dna.fa
-        cDNA: data/refs/homo_sapiens.cdna.fa
-    Homo_sapiens_chr21:
-        GTF: data/refs/homo_sapiens.chr21.annot.gtf
-        DNA: data/refs/homo_sapiens.chr21.dna.fa
-        cDNA: data/refs/homo_sapiens.chr21.cdna.fa
-    barcodes:
-        10x: data/refs/3M-february-2018.txt.gz
-
-samples:
-    A549:
-        fastq:
-            - data/samples/SGNex_A549_directcDNA_replicate1_run3.fastq.gz
-        ref: Homo_sapiens
-    Hct116:
-        fastq:
-            - data/samples/SGNex_Hct116_directcDNA_replicate4_run1.fastq.gz
-        ref: Homo_sapiens
-    HepG2:
-        fastq:
-            - data/samples/SGNex_HepG2_directcDNA_replicate5_run3.fastq.gz
-        ref: Homo_sapiens
-    K562:
-        fastq:
-            - data/samples/SGNex_K562_directcDNA_replicate1_run2.fastq.gz
-        ref: Homo_sapiens
-    MCF7:
-        fastq:
-            - data/samples/SGNex_MCF7_directcDNA_replicate4_run2.fastq.gz
-        ref: Homo_sapiens
-    A549_chr21:
-        fastq:
-            - data/samples/SGNex_A549_directcDNA_replicate1_run3.fastq.gz
-        ref: Homo_sapiens_chr21
-    Hct116_chr21:
-        fastq:
-            - data/samples/SGNex_Hct116_directcDNA_replicate4_run1.fastq.gz
-        ref: Homo_sapiens_chr21
-    HepG2_chr21:
-        fastq:
-            - data/samples/SGNex_HepG2_directcDNA_replicate5_run3.fastq.gz
-        ref: Homo_sapiens_chr21
-    K562_chr21:
-        fastq:
-            - data/samples/SGNex_K562_directcDNA_replicate1_run2.fastq.gz
-        ref: Homo_sapiens_chr21
-    MCF7_chr21:
-        fastq:
-            - data/samples/SGNex_MCF7_directcDNA_replicate4_run2.fastq.gz
-        ref: Homo_sapiens_chr21
-
-models:
-    Tsb:
+TKSM:
+    outpath: simulate
+    enable_piping: false
+    experiments:
+        C1_chr21:
+            pipeline:
+                - Tsb:
+                      params: "--molecule-count 100000 --molecule-prefix C1: -s 41"
+                      model: A549_chr21
+        C2_chr21:
+            pipeline:
+                - Tsb:
+                      params: "--molecule-count 100000 --molecule-prefix C2: -s 42"
+                      model: Hct116_chr21
+        C3_chr21:
+            pipeline:
+                - Tsb:
+                      params: "--molecule-count 100000 --molecule-prefix C3: -s 43"
+                      model: HepG2_chr21
+        C4_chr21:
+            pipeline:
+                - Tsb:
+                      params: "--molecule-count 100000 --molecule-prefix C4: -s 44"
+                      model: K562_chr21
+        C5_chr21:
+            pipeline:
+                - Tsb:
+                      params: "--molecule-count 100000 --molecule-prefix C5: -s 45"
+                      model: MCF7_chr21
+        S1_chr21:
+            pipeline:
+                - Mrg:
+                      sources:
+                          [
+                              "C1_chr21",
+                              "C2_chr21",
+                              "C3_chr21",
+                              "C4_chr21",
+                              "C5_chr21",
+                          ]
+                - plA:
+                      params: "--normal=15,7.5"
+                - Trc:
+                      params: ""
+                      model: MCF7_chr21
+                - Tag:
+                      params: "--format3 10"
+                - SCB:
+                      params: ""
+                - Tag:
+                      params: "--format3 AGATCGGAAGAGCGTCGTGTAG"
+                - PCR:
+                      params: "--cycles 5 --molecule-count 5000000 -x Taq-setting1"
+                - Flp:
+                      params: "-p 0.5"
+                - Tag:
+                      params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
+                - Shf:
+                      params: ""
+                - Seq:
+                      params: "--skip-qual-compute"
+    exec: tksm
+    refs:
+        Homo_sapiens:
+            GTF: data/refs/homo_sapiens.annot.gtf
+            DNA: data/refs/homo_sapiens.dna.fa
+            cDNA: data/refs/homo_sapiens.cdna.fa
+        Homo_sapiens_chr21:
+            GTF: data/refs/homo_sapiens.chr21.annot.gtf
+            DNA: data/refs/homo_sapiens.chr21.dna.fa
+            cDNA: data/refs/homo_sapiens.chr21.cdna.fa
+        barcodes:
+            10x: data/refs/3M-february-2018.txt.gz
+    samples:
         A549:
-            sample: A549
-            cb-txt: 10x
-            params: "--cb-count 500  --cb-dropout 0.0 --random-seed 41"
+            fastq:
+                - data/samples/SGNex_A549_directcDNA_replicate1_run3.fastq.gz
+            ref: Homo_sapiens
         Hct116:
-            sample: Hct116
-            cb-txt: 10x
-            params: "--cb-count 500  --cb-dropout 0.0 --random-seed 42"
+            fastq:
+                - data/samples/SGNex_Hct116_directcDNA_replicate4_run1.fastq.gz
+            ref: Homo_sapiens
         HepG2:
-            sample: HepG2
-            cb-txt: 10x
-            params: "--cb-count 500  --cb-dropout 0.0 --random-seed 43"
+            fastq:
+                - data/samples/SGNex_HepG2_directcDNA_replicate5_run3.fastq.gz
+            ref: Homo_sapiens
         K562:
-            sample: K562
-            cb-txt: 10x
-            params: "--cb-count 500  --cb-dropout 0.0 --random-seed 44"
+            fastq:
+                - data/samples/SGNex_K562_directcDNA_replicate1_run2.fastq.gz
+            ref: Homo_sapiens
         MCF7:
-            sample: MCF7
-            cb-txt: 10x
-            params: "--cb-count 500  --cb-dropout 0.0 --random-seed 45"
+            fastq:
+                - data/samples/SGNex_MCF7_directcDNA_replicate4_run2.fastq.gz
+            ref: Homo_sapiens
         A549_chr21:
-            sample: A549_chr21
-            cb-txt: 10x
-            params: "--cb-count 500  --cb-dropout 0.0 --random-seed 41"
+            fastq:
+                - data/samples/SGNex_A549_directcDNA_replicate1_run3.fastq.gz
+            ref: Homo_sapiens_chr21
         Hct116_chr21:
-            sample: Hct116_chr21
-            cb-txt: 10x
-            params: "--cb-count 500  --cb-dropout 0.0 --random-seed 42"
+            fastq:
+                - data/samples/SGNex_Hct116_directcDNA_replicate4_run1.fastq.gz
+            ref: Homo_sapiens_chr21
         HepG2_chr21:
-            sample: HepG2_chr21
-            cb-txt: 10x
-            params: "--cb-count 500  --cb-dropout 0.0 --random-seed 43"
+            fastq:
+                - data/samples/SGNex_HepG2_directcDNA_replicate5_run3.fastq.gz
+            ref: Homo_sapiens_chr21
         K562_chr21:
-            sample: K562_chr21
-            cb-txt: 10x
-            params: "--cb-count 500  --cb-dropout 0.0 --random-seed 44"
+            fastq:
+                - data/samples/SGNex_K562_directcDNA_replicate1_run2.fastq.gz
+            ref: Homo_sapiens_chr21
         MCF7_chr21:
-            sample: MCF7_chr21
-            cb-txt: 10x
-            params: "--cb-count 500  --cb-dropout 0.0 --random-seed 45"
+            fastq:
+                - data/samples/SGNex_MCF7_directcDNA_replicate4_run2.fastq.gz
+            ref: Homo_sapiens_chr21
+    models:
+        Tsb:
+            A549:
+                sample: A549
+                cb-txt: 10x
+                params: "--cb-count 500  --cb-dropout 0.0 --random-seed 41"
+            Hct116:
+                sample: Hct116
+                cb-txt: 10x
+                params: "--cb-count 500  --cb-dropout 0.0 --random-seed 42"
+            HepG2:
+                sample: HepG2
+                cb-txt: 10x
+                params: "--cb-count 500  --cb-dropout 0.0 --random-seed 43"
+            K562:
+                sample: K562
+                cb-txt: 10x
+                params: "--cb-count 500  --cb-dropout 0.0 --random-seed 44"
+            MCF7:
+                sample: MCF7
+                cb-txt: 10x
+                params: "--cb-count 500  --cb-dropout 0.0 --random-seed 45"
+            A549_chr21:
+                sample: A549_chr21
+                cb-txt: 10x
+                params: "--cb-count 500  --cb-dropout 0.0 --random-seed 41"
+            Hct116_chr21:
+                sample: Hct116_chr21
+                cb-txt: 10x
+                params: "--cb-count 500  --cb-dropout 0.0 --random-seed 42"
+            HepG2_chr21:
+                sample: HepG2_chr21
+                cb-txt: 10x
+                params: "--cb-count 500  --cb-dropout 0.0 --random-seed 43"
+            K562_chr21:
+                sample: K562_chr21
+                cb-txt: 10x
+                params: "--cb-count 500  --cb-dropout 0.0 --random-seed 44"
+            MCF7_chr21:
+                sample: MCF7_chr21
+                cb-txt: 10x
+                params: "--cb-count 500  --cb-dropout 0.0 --random-seed 45"

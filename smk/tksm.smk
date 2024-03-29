@@ -10,10 +10,8 @@ if len(config) == 0:
 
 outpath = config["outpath"]
 preproc_d = f"{outpath}/preprocess"
-TS_d = f"{outpath}/TS"
-exprmnts_re = "|".join([re.escape(x) for x in config["TS_experiments"]])
-
-DEBUG = False
+tksm_d = f"{outpath}/TKSM"
+exprmnts_re = "|".join([re.escape(x) for x in config["experiments"]])
 
 for sample in config["samples"]:
     for mtype in ["Tsb", "Trc", "Seq"]:
@@ -36,6 +34,18 @@ model_details_t = NamedTuple(
         ("params_run", str),
     ],
 )
+
+
+def get_source_mdfs(exprmnt):
+    first_step = config["experiments"][exprmnt]["pipeline"][0]
+    rule_name = list(first_step)[0]
+    first_step = first_step[rule_name]
+    if rule_name == "Mrg":
+        return sorted(
+            {mdf for source in first_step["sources"] for mdf in get_source_mdfs(source)}
+        )
+    if rule_name == "Tsb":
+        return [f"{tksm_d}/{exprmnt}/Tsb.mdf"]
 
 
 def get_model_details(mtype, name):
@@ -110,7 +120,7 @@ def get_model_details(mtype, name):
 
 
 def exprmnt_final_file(exprmnt):
-    prefix = [list(step)[0] for step in config["TS_experiments"][exprmnt]["pipeline"]]
+    prefix = [list(step)[0] for step in config["experiments"][exprmnt]["pipeline"]]
     if prefix[-1] in ["Seq"]:
         prefix.append("fastq")
     elif prefix[-1] in [
@@ -129,7 +139,7 @@ def exprmnt_final_file(exprmnt):
     else:
         raise ValueError(f"Invalid terminal pipeline step! {prefix[-1]}")
     prefix = ".".join(prefix)
-    final_file = f"{TS_d}/{exprmnt}/{prefix}"
+    final_file = f"{tksm_d}/{exprmnt}/{prefix}"
     return final_file
 
 
@@ -137,9 +147,9 @@ def get_sample_ref_names(sample):
     # Check if sample is real
     if sample in config["samples"]:
         return [config["samples"][sample]["ref"]]
-    # If not, then sample must be a TS experiment
-    if sample in config["TS_experiments"]:
-        step = config["TS_experiments"][sample]["pipeline"][0]
+    # If not, then sample must be a TKSM experiment
+    if sample in config["experiments"]:
+        step = config["experiments"][sample]["pipeline"][0]
         rule_name = list(step)[0]
         step = step[rule_name]
         # If 1st step is transcribe, then return the reference of its model's sample
@@ -180,7 +190,7 @@ def get_sample_fastqs(name):
     if name in config["samples"]:
         sample = name
         return config["samples"][sample]["fastq"]
-    if name in config["TS_experiments"]:
+    if name in config["experiments"]:
         exprmnt = name
         fastq = exprmnt_final_file(exprmnt)
         assert fastq.endswith(".fastq")
@@ -190,7 +200,7 @@ def get_sample_fastqs(name):
 
 def get_step(exprmnt, prefix):
     idx = len(prefix.split(".")) - 1
-    step = config["TS_experiments"][exprmnt]["pipeline"][idx]
+    step = config["experiments"][exprmnt]["pipeline"][idx]
     rule_name = list(step)[0]
     return step[rule_name]
 
@@ -238,7 +248,7 @@ rule all:
     input:
         [
             exprmnt_final_file(exprmnt)
-            for exprmnt in config["TS_experiments"]
+            for exprmnt in config["experiments"]
             if exprmnt_final_file(exprmnt).endswith("fastq")
         ],
 
@@ -248,10 +258,8 @@ if config["enable_piping"] == True:
     merge_source_mdf_counter = Counter()
     merge_to_numbered_sources = dict()
 
-    for exprmnt in config["TS_experiments"]:
-        step, details = tuple(config["TS_experiments"][exprmnt]["pipeline"][0].items())[
-            0
-        ]
+    for exprmnt in config["experiments"]:
+        step, details = tuple(config["experiments"][exprmnt]["pipeline"][0].items())[0]
         if not step == "Mrg":
             continue
         merge_to_numbered_sources[exprmnt] = list()
@@ -281,15 +289,15 @@ else:
 
 rule sequence:
     input:
-        mdf=f"{TS_d}/{{exprmnt}}/{{prefix}}.mdf",
+        mdf=f"{tksm_d}/{{exprmnt}}/{{prefix}}.mdf",
         fastas=lambda wc: get_sample_ref(wc.exprmnt, "DNA"),
         model=lambda wc: get_model(wc=wc, rule_name="Seq").outputs,
     output:
-        fastq=f"{TS_d}/{{exprmnt}}/{{prefix}}.Seq.fastq",
+        fastq=f"{tksm_d}/{{exprmnt}}/{{prefix}}.Seq.fastq",
     threads: 32
     params:
         config=lambda wc: get_step(wc.exprmnt, f"{wc.prefix}.Seq")["params"],
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
         fastas=lambda wc: get_sample_ref(wc.exprmnt, "DNA"),
         model=lambda wc: get_model(wc=wc, rule_name="Seq").params_run,
     wildcard_constraints:
@@ -306,12 +314,12 @@ rule sequence:
 
 rule filter:
     input:
-        mdf=f"{TS_d}/{{exprmnt}}/{{prefix}}.mdf",
+        mdf=f"{tksm_d}/{{exprmnt}}/{{prefix}}.mdf",
     output:
-        mdf=pipe(f"{TS_d}/{{exprmnt}}/{{prefix}}.Flt.mdf"),
+        mdf=pipe(f"{tksm_d}/{{exprmnt}}/{{prefix}}.Flt.mdf"),
     params:
         config=lambda wc: get_step(wc.exprmnt, f"{wc.prefix}.Flt")["params"],
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
     shell:
@@ -323,14 +331,14 @@ rule filter:
 
 rule truncate:
     input:
-        mdf=f"{TS_d}/{{exprmnt}}/{{prefix}}.mdf",
+        mdf=f"{tksm_d}/{{exprmnt}}/{{prefix}}.mdf",
         model=lambda wc: get_model(wc=wc, rule_name="Trc").outputs,
     output:
-        mdf=pipe(f"{TS_d}/{{exprmnt}}/{{prefix}}.Trc.mdf"),
+        mdf=pipe(f"{tksm_d}/{{exprmnt}}/{{prefix}}.Trc.mdf"),
     params:
         config=lambda wc: get_step(wc.exprmnt, f"{wc.prefix}.Trc")["params"],
         model=lambda wc: get_model(wc=wc, rule_name="Trc").params_run,
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
     shell:
@@ -343,12 +351,12 @@ rule truncate:
 
 rule unsegment:
     input:
-        mdf=f"{TS_d}/{{exprmnt}}/{{prefix}}.mdf",
+        mdf=f"{tksm_d}/{{exprmnt}}/{{prefix}}.mdf",
     output:
-        mdf=pipe(f"{TS_d}/{{exprmnt}}/{{prefix}}.Uns.mdf"),
+        mdf=pipe(f"{tksm_d}/{{exprmnt}}/{{prefix}}.Uns.mdf"),
     params:
         config=lambda wc: get_step(wc.exprmnt, f"{wc.prefix}.Uns")["params"],
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
     shell:
@@ -360,12 +368,12 @@ rule unsegment:
 
 rule shuffle:
     input:
-        mdf=f"{TS_d}/{{exprmnt}}/{{prefix}}.mdf",
+        mdf=f"{tksm_d}/{{exprmnt}}/{{prefix}}.mdf",
     output:
-        mdf=pipe(f"{TS_d}/{{exprmnt}}/{{prefix}}.Shf.mdf"),
+        mdf=pipe(f"{tksm_d}/{{exprmnt}}/{{prefix}}.Shf.mdf"),
     params:
         config=lambda wc: get_step(wc.exprmnt, f"{wc.prefix}.Shf")["params"],
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
     shell:
@@ -377,12 +385,12 @@ rule shuffle:
 
 rule flip:
     input:
-        mdf=f"{TS_d}/{{exprmnt}}/{{prefix}}.mdf",
+        mdf=f"{tksm_d}/{{exprmnt}}/{{prefix}}.mdf",
     output:
-        mdf=pipe(f"{TS_d}/{{exprmnt}}/{{prefix}}.Flp.mdf"),
+        mdf=pipe(f"{tksm_d}/{{exprmnt}}/{{prefix}}.Flp.mdf"),
     params:
         config=lambda wc: get_step(wc.exprmnt, f"{wc.prefix}.Flp")["params"],
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
     shell:
@@ -394,12 +402,12 @@ rule flip:
 
 rule pcr:
     input:
-        mdf=f"{TS_d}/{{exprmnt}}/{{prefix}}.mdf",
+        mdf=f"{tksm_d}/{{exprmnt}}/{{prefix}}.mdf",
     output:
-        mdf=pipe(f"{TS_d}/{{exprmnt}}/{{prefix}}.PCR.mdf"),
+        mdf=pipe(f"{tksm_d}/{{exprmnt}}/{{prefix}}.PCR.mdf"),
     params:
         config=lambda wc: get_step(wc.exprmnt, f"{wc.prefix}.PCR")["params"],
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
     shell:
@@ -411,12 +419,12 @@ rule pcr:
 
 rule tag:
     input:
-        mdf=f"{TS_d}/{{exprmnt}}/{{prefix}}.mdf",
+        mdf=f"{tksm_d}/{{exprmnt}}/{{prefix}}.mdf",
     output:
-        mdf=pipe(f"{TS_d}/{{exprmnt}}/{{prefix}}.Tag.mdf"),
+        mdf=pipe(f"{tksm_d}/{{exprmnt}}/{{prefix}}.Tag.mdf"),
     params:
         config=lambda wc: get_step(wc.exprmnt, f"{wc.prefix}.Tag")["params"],
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
     shell:
@@ -428,12 +436,12 @@ rule tag:
 
 rule single_cell_barcoder:
     input:
-        mdf=f"{TS_d}/{{exprmnt}}/{{prefix}}.mdf",
+        mdf=f"{tksm_d}/{{exprmnt}}/{{prefix}}.mdf",
     output:
-        mdf=pipe(f"{TS_d}/{{exprmnt}}/{{prefix}}.SCB.mdf"),
+        mdf=pipe(f"{tksm_d}/{{exprmnt}}/{{prefix}}.SCB.mdf"),
     params:
         config=lambda wc: get_step(wc.exprmnt, f"{wc.prefix}.SCB")["params"],
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
     shell:
@@ -445,12 +453,12 @@ rule single_cell_barcoder:
 
 rule polyA:
     input:
-        mdf=f"{TS_d}/{{exprmnt}}/{{prefix}}.mdf",
+        mdf=f"{tksm_d}/{{exprmnt}}/{{prefix}}.mdf",
     output:
-        mdf=pipe(f"{TS_d}/{{exprmnt}}/{{prefix}}.plA.mdf"),
+        mdf=pipe(f"{tksm_d}/{{exprmnt}}/{{prefix}}.plA.mdf"),
     params:
         config=lambda wc: get_step(wc.exprmnt, f"{wc.prefix}.plA")["params"],
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
     shell:
@@ -466,10 +474,10 @@ rule transcribe:
         model=lambda wc: get_model(wc=wc, rule_name="Tsb").outputs,
         gtf=lambda wc: get_sample_ref(wc.exprmnt, "GTF"),
     output:
-        mdf=pipe(f"{TS_d}/{{exprmnt}}/Tsb.mdf"),
+        mdf=pipe(f"{tksm_d}/{{exprmnt}}/Tsb.mdf"),
     params:
         config=lambda wc: get_step(wc.exprmnt, f"Tsb")["params"],
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
         model=lambda wc: get_model(wc=wc, rule_name="Tsb").params_run,
     wildcard_constraints:
         exprmnt=exprmnts_re,
@@ -487,7 +495,7 @@ if config["enable_piping"] == False:
         input:
             mdfs=get_merge_mdf_input,
         output:
-            mdf=pipe(f"{TS_d}/{{exprmnt}}/Mrg.mdf"),
+            mdf=pipe(f"{tksm_d}/{{exprmnt}}/Mrg.mdf"),
         shell:
             "cat {input.mdfs} > {output.mdf}"
 
@@ -498,7 +506,7 @@ else:
             script="py/mdf_cat.py",
             mdfs=lambda wc: merge_to_numbered_sources[wc.exprmnt],
         output:
-            mdf=pipe(f"{TS_d}/{{exprmnt}}/Mrg.mdf"),
+            mdf=pipe(f"{tksm_d}/{{exprmnt}}/Mrg.mdf"),
         shell:
             "python {input.script} {input.mdfs}  {output.mdf}"
 
@@ -510,7 +518,7 @@ rule model_transcribe:
     output:
         model=f"{preproc_d}/models/transcribe/{{model_name}}.Xpr.tsv",
     params:
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
         model=lambda wc: models["Tsb", wc.model_name].params_build,
     shell:
         "{params.binary} abundance {params.model}"
@@ -522,7 +530,7 @@ rule model_truncation:
     output:
         model=[f"{preproc_d}/models/truncate/{{model_name}}.json"],
     params:
-        binary=config["exec"]["tksm"],
+        binary=config["exec"],
         model=lambda wc: models["Trc", wc.model_name].params_build,
     threads: 32
     shell:

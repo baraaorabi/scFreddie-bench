@@ -1,15 +1,15 @@
-output_d = config["outpath"]
+output_d = f"{config['outpath']}/freddie"
 
 
 rule isoforms:
     input:
-        bam=f"{output_d}/freddie/preprocess/{{sample}}.sorted.bam",
-        rname_to_celltypes=f"{output_d}/freddie/preprocess/{{sample}}.rname_to_celltypes.tsv",
+        bam=f"{output_d}/preprocess/{{sample}}.sorted.bam",
+        rname_to_celltypes=f"{output_d}/preprocess/{{sample}}.rname_to_celltypes.tsv",
     output:
-        isoforms=f"{output_d}/freddie/{{sample}}.isoforms.gtf",
+        isoforms=f"{output_d}/{{sample}}.isoforms.gtf",
     threads: 32
     params:
-        script=config["exec"]["freddie"],
+        script=config["freddie"]["exec"],
     resources:
         mem="32G",
         time=359,
@@ -23,12 +23,12 @@ rule isoforms:
 
 rule rname_to_celltypes:
     input:
-        lr_tsv=f"{output_d}/freddie/preprocess/{{sample}}.lr_matches.tsv.gz",
+        lr_tsv=f"{output_d}/preprocess/{{sample}}.lr_matches.tsv.gz",
         truth=lambda wc: config["samples"][wc.sample]["truth"],
     output:
-        tsv=f"{output_d}/freddie/preprocess/{{sample}}.rname_to_celltypes.tsv",
+        tsv=f"{output_d}/preprocess/{{sample}}.rname_to_celltypes.tsv",
     params:
-        script=config["exec"]["rname_to_celltypes"],
+        script=config["freddie"]["rname_to_celltypes"],
     shell:
         "python {params.script}"
         " -lr {input.lr_tsv}"
@@ -38,10 +38,10 @@ rule rname_to_celltypes:
 
 rule scTagger_match:
     input:
-        lr_tsv=f"{output_d}/freddie/preprocess/{{sample}}.lr_bc.tsv.gz",
-        wl_tsv=f"{output_d}/freddie/preprocess/{{sample}}.bc_whitelist.tsv.gz",
+        lr_tsv=f"{output_d}/preprocess/{{sample}}.lr_bc.tsv.gz",
+        wl_tsv=f"{output_d}/preprocess/{{sample}}.bc_whitelist.tsv.gz",
     output:
-        lr_tsv=f"{output_d}/freddie/preprocess/{{sample}}.lr_matches.tsv.gz",
+        lr_tsv=f"{output_d}/preprocess/{{sample}}.lr_matches.tsv.gz",
     threads: 32
     shell:
         "scTagger.py match_trie"
@@ -53,10 +53,10 @@ rule scTagger_match:
 
 rule scTagger_extract_bc:
     input:
-        tsv=f"{output_d}/freddie/preprocess/{{sample}}.lr_bc.tsv.gz",
+        tsv=f"{output_d}/preprocess/{{sample}}.lr_bc.tsv.gz",
         cb=lambda wc: config["samples"][wc.sample]["CB"],
     output:
-        tsv=f"{output_d}/freddie/preprocess/{{sample}}.bc_whitelist.tsv.gz",
+        tsv=f"{output_d}/preprocess/{{sample}}.bc_whitelist.tsv.gz",
     shell:
         "scTagger.py extract_sr_bc_from_lr"
         " -i {input.tsv}"
@@ -68,7 +68,7 @@ rule scTagger_lr_seg:
     input:
         fastq=lambda wc: config["samples"][wc.sample]["FASTQ"],
     output:
-        tsv=f"{output_d}/freddie/preprocess/{{sample}}.lr_bc.tsv.gz",
+        tsv=f"{output_d}/preprocess/{{sample}}.lr_bc.tsv.gz",
     threads: 32
     shell:
         "scTagger.py extract_lr_bc"
@@ -82,8 +82,8 @@ rule minimap2:
         reads=lambda wc: config["samples"][wc.sample]["FASTQ"],
         genome=lambda wc: config["samples"][wc.sample]["DNA"],
     output:
-        bam=f"{output_d}/freddie/preprocess/{{sample}}.sorted.bam",
-        bai=f"{output_d}/freddie/preprocess/{{sample}}.sorted.bam.bai",
+        bam=f"{output_d}/preprocess/{{sample}}.sorted.bam",
+        bai=f"{output_d}/preprocess/{{sample}}.sorted.bam.bai",
     threads: 32
     resources:
         mem="128G",

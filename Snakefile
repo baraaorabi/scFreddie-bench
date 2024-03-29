@@ -20,11 +20,20 @@ module freddie_smk:
         config
 
 
-### Import TKSM Snakemake rules
+module FLAMES_smk:
+    snakefile:
+        "smk/FLAMES.smk"
+    config:
+        config
+
+
 use rule * from TKSM_smk exclude all as TKSM_*
 
 
-use rule * from freddie_smk exclude all as freddie_*
+use rule * from freddie_smk as freddie_*
+
+
+use rule * from FLAMES_smk as FLAMES_*
 
 
 output_d = config["outpath"]
@@ -47,6 +56,7 @@ rule all:
     input:
         [f for s in config["samples"].values() for f in s.values()],
         [f"{output_d}/freddie/{s}.isoforms.gtf" for s in config["samples"]],
+        [f"{output_d}/FLAMES/{s}" for s in config["samples"]],
     default_target: True
 
 

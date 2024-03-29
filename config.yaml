@@ -1,9 +1,12 @@
 outpath: output
 
-exec:
-    freddie: extern/freddie/freddie.py
+freddie:
+    exec: extern/freddie/freddie.py
     rname_to_celltypes: py/rname_to_celltypes.py
 
+FLAMES:
+    src: extern/FLAMES/src
+    exec: extern/FLAMES/
 TKSM:
     outpath: simulate
     enable_piping: false

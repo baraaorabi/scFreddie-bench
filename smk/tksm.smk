@@ -302,6 +302,8 @@ rule sequence:
         model=lambda wc: get_model(wc=wc, rule_name="Seq").params_run,
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} sequence"
         " -i {input.mdf}"
@@ -322,6 +324,8 @@ rule filter:
         binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} filter"
         " -i {input.mdf}"
@@ -341,6 +345,8 @@ rule truncate:
         binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} truncate"
         " -i {input.mdf}"
@@ -359,6 +365,8 @@ rule unsegment:
         binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} unsegment"
         " -i {input.mdf}"
@@ -376,6 +384,8 @@ rule shuffle:
         binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} shuffle"
         " -i {input.mdf}"
@@ -393,6 +403,8 @@ rule flip:
         binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} flip"
         " -i {input.mdf}"
@@ -410,6 +422,8 @@ rule pcr:
         binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} pcr"
         " -i {input.mdf}"
@@ -427,6 +441,8 @@ rule tag:
         binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} tag"
         " -i {input.mdf}"
@@ -444,6 +460,8 @@ rule single_cell_barcoder:
         binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} scb"
         " -i {input.mdf}"
@@ -461,6 +479,8 @@ rule polyA:
         binary=config["exec"],
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} polyA"
         " -i {input.mdf}"
@@ -481,6 +501,8 @@ rule transcribe:
         model=lambda wc: get_model(wc=wc, rule_name="Tsb").params_run,
     wildcard_constraints:
         exprmnt=exprmnts_re,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} transcribe"
         " -g {input.gtf}"
@@ -507,6 +529,8 @@ else:
             mdfs=lambda wc: merge_to_numbered_sources[wc.exprmnt],
         output:
             mdf=pipe(f"{tksm_d}/{{exprmnt}}/Mrg.mdf"),
+        conda:
+            "tksm.yaml"
         shell:
             "python {input.script} {input.mdfs}  {output.mdf}"
 
@@ -520,6 +544,8 @@ rule model_transcribe:
     params:
         binary=config["exec"],
         model=lambda wc: models["Tsb", wc.model_name].params_build,
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} abundance {params.model}"
 
@@ -533,6 +559,8 @@ rule model_truncation:
         binary=config["exec"],
         model=lambda wc: models["Trc", wc.model_name].params_build,
     threads: 32
+    conda:
+        "tksm.yaml"
     shell:
         "{params.binary} model-truncation {params.model} --threads {threads}"
 
@@ -545,6 +573,8 @@ rule model_sequence:
         qscore_model=f"{preproc_d}/models/badread/{{model_name}}.qscore.gz",
     params:
         model=lambda wc: models["Seq", wc.model_name].params_build,
+    conda:
+        "tksm.yaml"
     shell:
         "badread qscore_model {params.model} > {output.error_model}"
         " && "
@@ -559,6 +589,8 @@ rule minimap_cdna:
     output:
         paf=f"{preproc_d}/minimap2/{{sample}}.cDNA.paf",
     threads: 32
+    conda:
+        "tksm.yaml"
     shell:
         "minimap2"
         " -t {threads}"
@@ -577,6 +609,8 @@ rule scTagger_match:
     output:
         lr_tsv=f"{preproc_d}/scTagger/{{sample}}/{{sample}}.lr_matches.tsv.gz",
     threads: 32
+    conda:
+        "tksm.yaml"
     shell:
         "scTagger.py match_trie"
         " -lr {input.lr_tsv}"
@@ -591,6 +625,8 @@ rule scTagger_extract_bc:
         wl=lambda wc: config["refs"][config["samples"][wc.sample]["cb_wl"]],
     output:
         tsv=f"{preproc_d}/scTagger/{{sample}}/{{sample}}.bc_whitelist.tsv.gz",
+    conda:
+        "tksm.yaml"
     shell:
         "scTagger.py extract_sr_bc_from_lr"
         " -i {input.tsv}"
@@ -604,6 +640,8 @@ rule scTagger_lr_seg:
     output:
         tsv=f"{preproc_d}/scTagger/{{sample}}/{{sample}}.lr_bc.tsv.gz",
     threads: 32
+    conda:
+        "tksm.yaml"
     shell:
         "scTagger.py extract_lr_bc"
         " -r {input.reads}"
@@ -618,6 +656,8 @@ rule minimap_cdna_for_badread_models:
     output:
         paf=f"{preproc_d}/badread/{{sample}}.badread.cDNA.paf",
     threads: 32
+    conda:
+        "tksm.yaml"
     shell:
         "minimap2"
         " -t {threads}"

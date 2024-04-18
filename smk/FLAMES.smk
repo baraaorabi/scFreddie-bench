@@ -1,7 +1,5 @@
 output_d = f"{config['outpath']}/FLAMES"
 
-print("FLAMES:", output_d)
-
 
 rule isoforms:
     input:
@@ -14,6 +12,8 @@ rule isoforms:
         directory(
             f"{output_d}/{{sample}}",
         ),
+    conda:
+        "FLAMES.yaml"
     shell:
         "{input.script}"
         " -a {input.gtf}"
@@ -34,6 +34,8 @@ rule match:
     params:
         e=2,
         fastq_dir=f"{output_d}/preprocess/{{sample}}_fastqs",
+    conda:
+        "FLAMES.yaml"
     shell:
         "mkdir -p {params.fastq_dir} && ln -s {input.fastq} {params.fastq_dir}/1.fastq && "
         "{input.script}"
@@ -58,6 +60,8 @@ rule make_match:
         ],
     output:
         f"{output_d}/match_cell_barcodes",
+    conda:
+        "FLAMES.yaml"
     shell:
         """
         g++ -std=c++11 -O2 -I"$(dirname $(dirname  $(which g++)))/include" -o {output} {input}
@@ -70,6 +74,8 @@ rule scTagger_extract_bc:
         cb=lambda wc: config["samples"][wc.sample]["CB"],
     output:
         tsv=f"{output_d}/preprocess/{{sample}}.bc_whitelist.tsv.gz",
+    conda:
+        "FLAMES.yaml"
     shell:
         "scTagger.py extract_sr_bc_from_lr"
         " -i {input.tsv}"
@@ -83,6 +89,8 @@ rule scTagger_lr_seg:
     output:
         tsv=f"{output_d}/preprocess/{{sample}}.lr_bc.tsv.gz",
     threads: 32
+    conda:
+        "FLAMES.yaml"
     shell:
         "scTagger.py extract_lr_bc"
         " -r {input.fastq}"
@@ -93,6 +101,8 @@ rule scTagger_lr_seg:
 rule minimap2_tools:
     output:
         f"{output_d}/preprocess/minimap2_tools",
+    conda:
+        "FLAMES.yaml"
     shell:
         """
         mkdir -p {output}

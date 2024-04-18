@@ -75,7 +75,7 @@ rule scTagger_extract_bc:
     output:
         tsv=f"{output_d}/preprocess/{{sample}}.bc_whitelist.tsv.gz",
     conda:
-        "FLAMES.yaml"
+        "scTagger.yaml"
     shell:
         "scTagger.py extract_sr_bc_from_lr"
         " -i {input.tsv}"
@@ -90,7 +90,7 @@ rule scTagger_lr_seg:
         tsv=f"{output_d}/preprocess/{{sample}}.lr_bc.tsv.gz",
     threads: 32
     conda:
-        "FLAMES.yaml"
+        "scTagger.yaml"
     shell:
         "scTagger.py extract_lr_bc"
         " -r {input.fastq}"

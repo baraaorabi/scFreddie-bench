@@ -1,0 +1,5 @@
+name: scTagger
+channels:
+  - bioconda
+dependencies:
+  - sctagger=1.1.1

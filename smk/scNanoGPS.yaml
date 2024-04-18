@@ -4,7 +4,6 @@ channels:
   - bioconda
   - nodefaults
   - anaconda
-  - gurobi
 dependencies:
   - python=3
   - numpy

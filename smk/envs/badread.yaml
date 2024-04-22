@@ -1,0 +1,7 @@
+name: sc_bench_badread
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10
+  - badread=0.2.0

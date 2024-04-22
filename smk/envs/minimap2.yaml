@@ -1,0 +1,6 @@
+name: sc_bench_minimap2
+channels:
+  - bioconda
+dependencies:
+  - minimap2=2.28
+  - samtools=1.20

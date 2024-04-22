@@ -6,8 +6,9 @@ freddie:
 
 FLAMES:
     src: extern/FLAMES/src
-    exec: extern/FLAMES/
+    exec: extern/FLAMES/python/sc_long_pipeline.py
 TKSM:
+    exec: tksm
     outpath: output/simulate
     enable_piping: false
     experiments:
@@ -57,7 +58,7 @@ TKSM:
                 - SCB:
                       params: ""
                 - Tag:
-                      params: "--format5 CTACACGACGCTCTTCCGATCT --format3 CCCATGTACTCTGCGTTGATACCACTGCTT"
+                      params: "--format5 AAGCAGTGGTATCAACGCAGAGTACATGGG --format3 AGATCGGAAGAGCGTCGTGTAG"
                 - PCR:
                       params: "--cycles 5 --molecule-count 250000 -x Taq-setting1"
                 - Flp:
@@ -68,14 +69,15 @@ TKSM:
                       params: ""
                 - Seq:
                       params: "--skip-qual-compute"
-    exec: tksm
     refs:
         Homo_sapiens:
             GTF: data/refs/homo_sapiens.annot.gtf
+            GFF3: data/refs/homo_sapiens.annot.gff3
             DNA: data/refs/homo_sapiens.dna.fa
             cDNA: data/refs/homo_sapiens.cdna.fa
         Homo_sapiens_chr21:
             GTF: data/refs/homo_sapiens.chr21.annot.gtf
+            GFF3: data/refs/homo_sapiens.chr21.annot.gff3
             DNA: data/refs/homo_sapiens.chr21.dna.fa
             cDNA: data/refs/homo_sapiens.chr21.cdna.fa
         barcodes:

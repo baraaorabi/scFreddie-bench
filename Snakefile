@@ -46,6 +46,7 @@ for x in config["TKSM"]["experiments"]:
             "DNA": TKSM_smk.get_sample_ref(x, "DNA"),
             "cDNA": TKSM_smk.get_sample_ref(x, "cDNA"),
             "GTF": TKSM_smk.get_sample_ref(x, "GTF"),
+            "GFF3": TKSM_smk.get_sample_ref(x, "GFF3"),
             "MDFs": TKSM_smk.get_source_mdfs(x),
             "CB": config["TKSM"]["refs"]["barcodes"]["10x"],
             "truth": f"{output_d}/truth/{x}.tsv",

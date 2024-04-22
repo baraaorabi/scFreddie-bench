@@ -1,0 +1,14 @@
+name: sc_bench_freddie
+channels:
+  - conda-forge
+  - bioconda
+  - gurobi
+dependencies:
+  - python=3.10
+  - gurobi=9.5.2
+  - numpy=1.26
+  - pysam=0.22.0
+  - scikit-learn=1.4.2
+  - scipy=1.13.0
+  - tqdm=4.66.2
+  - cgranges=0.1.1

@@ -12,7 +12,7 @@ rule scan:
         d=f"{output_d}/{{sample}}",
     threads: 32
     conda:
-        "scNanoGPS.yaml"
+        "envs/scnanogps.yaml"
     shell:
         "python {input.script}"
         " -i {input.fastq}"
@@ -30,7 +30,7 @@ rule assign:
         d=f"{output_d}/{{sample}}",
     threads: 32
     conda:
-        "scNanoGPS.yaml"
+        "envs/scnanogps.yaml"
     shell:
         "python {input.script}"
         " -d {params.d}"
@@ -49,7 +49,7 @@ rule curate:
         d=f"{output_d}/{{sample}}",
     threads: 32
     conda:
-        "scNanoGPS.yaml"
+        "envs/scnanogps.yaml"
     shell:
         "python {input.script}"
         " -d {params.d}"
@@ -67,7 +67,7 @@ rule report:
         d=f"{output_d}/{{sample}}",
     threads: 32
     conda:
-        "scNanoGPS.yaml"
+        "envs/scnanogps.yaml"
     shell:
         "python {input.script}"
         " -d {params.d}"

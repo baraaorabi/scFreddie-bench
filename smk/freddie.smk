@@ -14,7 +14,7 @@ rule isoforms:
         mem="32G",
         time=359,
     conda:
-        "freddie.yaml"
+        "envs/freddie.yaml"
     shell:
         "{params.script}"
         " --rname-to-celltypes {input.rname_to_celltypes}"
@@ -32,7 +32,7 @@ rule rname_to_celltypes:
     params:
         script=config["freddie"]["rname_to_celltypes"],
     conda:
-        "freddie.yaml"
+        "envs/freddie.yaml"
     shell:
         "python {params.script}"
         " -lr {input.lr_tsv}"
@@ -48,7 +48,7 @@ rule scTagger_match:
         lr_tsv=f"{output_d}/preprocess/{{sample}}.lr_matches.tsv.gz",
     threads: 32
     conda:
-        "scTagger.yaml"
+        "envs/sctagger.yaml"
     shell:
         "scTagger.py match_trie"
         " -lr {input.lr_tsv}"
@@ -64,7 +64,7 @@ rule scTagger_extract_bc:
     output:
         tsv=f"{output_d}/preprocess/{{sample}}.bc_whitelist.tsv.gz",
     conda:
-        "scTagger.yaml"
+        "envs/sctagger.yaml"
     shell:
         "scTagger.py extract_sr_bc_from_lr"
         " -i {input.tsv}"
@@ -79,7 +79,7 @@ rule scTagger_lr_seg:
         tsv=f"{output_d}/preprocess/{{sample}}.lr_bc.tsv.gz",
     threads: 32
     conda:
-        "scTagger.yaml"
+        "envs/sctagger.yaml"
     shell:
         "scTagger.py extract_lr_bc"
         " -r {input.fastq}"
@@ -99,7 +99,7 @@ rule minimap2:
         mem="128G",
         time=24 * 60 - 1,
     conda:
-        "freddie.yaml"
+        "envs/minimap2.yaml"
     shell:
         "minimap2 -a -x splice -t {threads} {input.genome} {input.reads} | "
         "  samtools sort -T {output.bam}.tmp -m 2G -@ {threads} -O bam - > {output.bam} && "

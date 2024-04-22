@@ -1,0 +1,7 @@
+name: sc_bench_sctagger
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10
+  - sctagger=1.1.1

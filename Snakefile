@@ -26,6 +26,12 @@ module FLAMES_smk:
     config:
         config
 
+module scNanoGPS_smk:
+    snakefile:
+        "smk/scNanoGPS.smk"
+    config:
+        config
+
 
 use rule * from TKSM_smk exclude all as TKSM_*
 
@@ -34,6 +40,8 @@ use rule * from freddie_smk as freddie_*
 
 
 use rule * from FLAMES_smk as FLAMES_*
+
+use rule * from scNanoGPS_smk as scNanoGPS_*
 
 
 output_d = config["outpath"]
@@ -58,6 +66,7 @@ rule all:
         [f for s in config["samples"].values() for f in s.values()],
         [f"{output_d}/freddie/{s}.isoforms.gtf" for s in config["samples"]],
         [f"{output_d}/FLAMES/{s}" for s in config["samples"]],
+        [f"{output_d}/scNanoGPS/{s}/matrix_isoform.tsv" for s in config["samples"]],
     default_target: True
 
 

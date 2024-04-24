@@ -7,6 +7,14 @@ freddie:
 FLAMES:
     src: extern/FLAMES/src
     exec: extern/FLAMES/python/sc_long_pipeline.py
+
+scNanoGPS:
+    scan: "extern/scNanoGPS/scanner.py"
+    assign: "extern/scNanoGPS/assigner.py"
+    curate: "extern/scNanoGPS/curator.py"
+    expression: "extern/scNanoGPS/reporter_expression.py"
+    isoforms: "extern/scNanoGPS/reporter_isoform.py"
+
 TKSM:
     exec: tksm
     outpath: output/simulate
@@ -101,7 +109,7 @@ TKSM:
             ref: Homo_sapiens
         MCF7:
             fastq:
-                - data/samples/SGNex_MCF7_directcDNA_replicate4_run2.fastq.gz
+                - data/samples/SGNex_MCF7_cDNA_replicate1_run3.fastq.gz
             ref: Homo_sapiens
         A549_chr21:
             fastq:
@@ -121,7 +129,7 @@ TKSM:
             ref: Homo_sapiens_chr21
         MCF7_chr21:
             fastq:
-                - data/samples/SGNex_MCF7_directcDNA_replicate4_run2.fastq.gz
+                - data/samples/SGNex_MCF7_cDNA_replicate1_run3.fastq.gz
             ref: Homo_sapiens_chr21
     models:
         Tsb:

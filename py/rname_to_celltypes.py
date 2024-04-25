@@ -19,7 +19,6 @@ def parse_args():
     parser.add_argument(
         "-truth_tsv",
         type=str,
-        nargs="+",
         required=True,
         help="Input: truth TSV",
     )

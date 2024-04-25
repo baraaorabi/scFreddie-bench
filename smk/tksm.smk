@@ -173,8 +173,6 @@ def get_sample_ref(sample, ref_type):
         file_type = "fasta"
     elif ref_type == "GTF":
         file_type = "gtf"
-    elif ref_type == "GFF3":
-        file_type = "gff3"
     else:
         raise ValueError(f"Invalid reference type! {ref_type}")
     return f"{preproc_d}/refs/{ref_name}.{ref_type}.{file_type}"

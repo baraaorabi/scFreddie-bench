@@ -102,5 +102,5 @@ rule minimap2:
         "envs/minimap2.yaml"
     shell:
         "minimap2 -a -x splice -t {threads} {input.genome} {input.reads} | "
-        "  samtools sort -T {output.bam}.tmp -m 2G -@ {threads} -O bam - > {output.bam} && "
+        "  samtools sort -T {output.bam}.tmp -@ {threads} -O bam - > {output.bam} && "
         "  samtools index {output.bam}"

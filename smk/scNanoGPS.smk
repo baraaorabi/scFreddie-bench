@@ -45,7 +45,7 @@ rule curate:
         cb_count=f"{output_d}/{{sample}}/CB_counting.tsv.gz",
         ref_genome=lambda wc: config["samples"][wc.sample]["DNA"],
     output:
-        filtered_barcode_list=f"{output_d}/{{sample}}/filtered_barcode_list.txt",
+        tmp_dir=directory(f"{output_d}/{{sample}}/tmp"),
     params:
         d=f"{output_d}/{{sample}}",
     threads: 32
@@ -55,8 +55,7 @@ rule curate:
         "python {input.script}"
         " -d {params.d}"
         " --ref_genome={input.dna}"
-        " --tmp_dir={params.d}/tmp"
-        " --skip_curation 1"
+        " --tmp_dir={output.tmp_dir}"
         " -t {threads}"
 
 
@@ -64,6 +63,7 @@ rule expression:
     input:
         script=config["scNanoGPS"]["expression"],
         gtf=lambda wc: config["samples"][wc.sample]["GTF"],
+        tmp_dir=f"{output_d}/{{sample}}/tmp",
     output:
         filtered_barcode_list=f"{output_d}/{{sample}}/filtered_barcode_list.txt",
     params:
@@ -78,9 +78,9 @@ rule expression:
         " -t {threads}"
 
 
-rule report:
+rule isoforms:
     input:
-        script=config["scNanoGPS"]["report"],
+        script=config["scNanoGPS"]["isoforms"],
         filtered_barcode_list=f"{output_d}/{{sample}}/filtered_barcode_list.txt",
         liqa_ref=lambda wc: config["samples"][wc.sample]["DNA"],
     output:

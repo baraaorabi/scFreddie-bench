@@ -108,14 +108,28 @@ rule expression:
         "python {input.script}"
         " -d {params.d}"
         " --gtf={input.gtf}"
+        " --tmp_dir={input.tmp_dir}"
         " -t {threads}"
+
+
+rule liqa_refgene:
+    input:
+        gtf=lambda wc: config["samples"][wc.sample]["GTF"],
+    output:
+        liqa_refgene=f"{output_d}/{{sample}}/liqa.refgene",
+    shell:
+        "liqa -task refgene"
+        " -format gtf"
+        " -ref {input.gtf}"
+        " -out {output.liqa_refgene}"
 
 
 rule isoforms:
     input:
         script=config["scNanoGPS"]["isoforms"],
         filtered_barcode_list=f"{output_d}/{{sample}}/filtered_barcode_list.txt",
-        liqa_ref=lambda wc: config["samples"][wc.sample]["DNA"],
+        liqa_refgene=f"{output_d}/{{sample}}/liqa.refgene",
+        tmp_dir=f"{output_d}/{{sample}}/tmp",
     output:
         matrix_isoform=f"{output_d}/{{sample}}/matrix_isoform.tsv",
     params:
@@ -125,5 +139,7 @@ rule isoforms:
         "envs/scnanogps.yaml"
     shell:
         "python {input.script}"
+        " --liqa_ref {input.liqa_refgene}"
+        " --tmp_dir={input.tmp_dir}"
         " -d {params.d}"
         " -t {threads}"

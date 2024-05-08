@@ -1,6 +1,39 @@
 output_d = f"{config['outpath']}/scNanoGPS"
 
 
+rule read_qc:
+    input:
+        script=config["scNanoGPS"]["read_qc"],
+        fastq=lambda wc: config["samples"][wc.sample]["FASTQ"],
+    output:
+        o1=f"{output_d}/{{sample}}/first_tail.fastq.gz",
+        o2=f"{output_d}/{{sample}}/last_tail.fastq.gz",
+    params:
+        d=f"{output_d}/{{sample}}",
+    conda:
+        "envs/scnanogps.yaml"
+    shell:
+        "python {input.script}"
+        " -i {input.fastq}"
+        " -d {params.d}"
+
+
+rule profile:
+    input:
+        script=config["scNanoGPS"]["profile"],
+        fastq=lambda wc: config["samples"][wc.sample]["FASTQ"],
+    output:
+        png=f"{output_d}/{{sample}}/read_length.png",
+    params:
+        d=f"{output_d}/{{sample}}",
+    conda:
+        "envs/scnanogps.yaml"
+    shell:
+        "python {input.script}"
+        " -i {input.fastq}"
+        " -d {params.d}"
+
+
 rule scan:
     input:
         script=config["scNanoGPS"]["scan"],

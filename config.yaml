@@ -9,6 +9,8 @@ FLAMES:
     exec: extern/FLAMES/python/sc_long_pipeline.py
 
 scNanoGPS:
+    profile: "extern/scNanoGPS/other_utils/read_length_profiler.py"
+    read_qc: "extern/scNanoGPS/other_utils/read_length_profiler.py"
     scan: "extern/scNanoGPS/scanner.py"
     assign: "extern/scNanoGPS/assigner.py"
     curate: "extern/scNanoGPS/curator.py"

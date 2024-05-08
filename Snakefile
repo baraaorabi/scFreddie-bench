@@ -66,6 +66,8 @@ rule all:
         [f"{output_d}/freddie/{s}.isoforms.gtf" for s in config["samples"]],
         [f"{output_d}/FLAMES/{s}" for s in config["samples"]],
         [f"{output_d}/scNanoGPS/{s}/matrix_isoform.tsv" for s in config["samples"]],
+        [f"{output_d}/scNanoGPS/{s}/read_length.png" for s in config["samples"]],
+        [f"{output_d}/scNanoGPS/{s}/first_tail.fastq.gz" for s in config["samples"]],
     default_target: True
 
 

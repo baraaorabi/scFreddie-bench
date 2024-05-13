@@ -87,8 +87,8 @@ rule curate:
     shell:
         "python {input.script}"
         " -d {params.d}"
-        " --ref_genome={input.dna}"
-        " --tmp_dir={output.tmp_dir}"
+        " --ref_genome {input.dna}"
+        " --tmp_dir {output.tmp_dir}"
         " -t {threads}"
 
 
@@ -107,8 +107,8 @@ rule expression:
     shell:
         "python {input.script}"
         " -d {params.d}"
-        " --gtf={input.gtf}"
-        " --tmp_dir={input.tmp_dir}"
+        " --gtf {input.gtf}"
+        " --tmp_dir {input.tmp_dir}"
         " -t {threads}"
 
 
@@ -140,6 +140,6 @@ rule isoforms:
     shell:
         "python {input.script}"
         " --liqa_ref {input.liqa_refgene}"
-        " --tmp_dir={input.tmp_dir}"
+        " --tmp_dir {input.tmp_dir}"
         " -d {params.d}"
         " -t {threads}"

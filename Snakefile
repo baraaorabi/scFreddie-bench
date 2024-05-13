@@ -26,6 +26,7 @@ module FLAMES_smk:
     config:
         config
 
+
 module scNanoGPS_smk:
     snakefile:
         "smk/scNanoGPS.smk"
@@ -40,6 +41,7 @@ use rule * from freddie_smk as freddie_*
 
 
 use rule * from FLAMES_smk as FLAMES_*
+
 
 use rule * from scNanoGPS_smk as scNanoGPS_*
 

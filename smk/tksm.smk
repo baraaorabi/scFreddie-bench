@@ -63,7 +63,7 @@ def get_model_details(mtype, name):
         paf = get_sample_paf(sample, "cDNA")
         params_build.append(f"-p {paf}")
         inputs.append(paf)
-        Xpr_tsv = f"{preproc_d}/models/transcribe/{name}.Xpr.tsv"
+        Xpr_tsv = f"{preproc_d}/models/transcribe/{name}.Xpr.tsv.gz"
         params_build.append(f"-o {Xpr_tsv}")
         if "cb-txt" in model_dict:
             cb_txt = get_barcode_whitelist(model_dict["cb-txt"])
@@ -74,7 +74,7 @@ def get_model_details(mtype, name):
             params_build.append(f"--lr-bc {lr_matches_tsv}")
             inputs.append(lr_matches_tsv)
         # Outputs / Run params
-        params_run.append(f"-a {Xpr_tsv}")
+        params_run.append(f"-a <(zcat {Xpr_tsv})")
         outputs.append(Xpr_tsv)
     elif mtype == "Trc":
         # Inputs / Build params
@@ -85,7 +85,6 @@ def get_model_details(mtype, name):
         model_path = f"{preproc_d}/models/truncate/{name}.json"
         params_build.append(f"-o {model_path}")
         # Outputs / Run params
-
         outputs.append(model_path)
         params_run.append(f"--kde-model {model_path}")
     elif mtype == "Seq":
@@ -540,7 +539,7 @@ rule model_transcribe:
     input:
         model=lambda wc: models["Tsb", wc.model_name].inputs,
     output:
-        model=f"{preproc_d}/models/transcribe/{{model_name}}.Xpr.tsv",
+        model=f"{preproc_d}/models/transcribe/{{model_name}}.Xpr.tsv.gz",
     params:
         binary=config["exec"],
         model=lambda wc: models["Tsb", wc.model_name].params_build,

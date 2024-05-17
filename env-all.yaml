@@ -31,6 +31,7 @@ dependencies:
   - spoa=4.1.4
   - subread=2.0.6
   - tabix=1.11
+  - time=1.8
   - tksm=0.6.0
   - tqdm=4.66.2
   - zlib=1.2.13

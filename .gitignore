@@ -1,7 +1,9 @@
 data/
 output/
+tints/
 .snakemake/
 slurm_logs/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

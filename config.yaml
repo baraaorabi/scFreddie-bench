@@ -75,27 +75,27 @@ TKSM:
         C1_chr21:
             pipeline:
                 - Tsb:
-                      params: "--molecule-count 500000 --molecule-prefix C1: -s 41"
+                      params: "--molecule-count 25000 --molecule-prefix C1: -s 41"
                       model: A549_chr21
         C2_chr21:
             pipeline:
                 - Tsb:
-                      params: "--molecule-count 500000 --molecule-prefix C2: -s 42"
+                      params: "--molecule-count 25000 --molecule-prefix C2: -s 42"
                       model: Hct116_chr21
         C3_chr21:
             pipeline:
                 - Tsb:
-                      params: "--molecule-count 500000 --molecule-prefix C3: -s 43"
+                      params: "--molecule-count 25000 --molecule-prefix C3: -s 43"
                       model: HepG2_chr21
         C4_chr21:
             pipeline:
                 - Tsb:
-                      params: "--molecule-count 500000 --molecule-prefix C4: -s 44"
+                      params: "--molecule-count 25000 --molecule-prefix C4: -s 44"
                       model: K562_chr21
         C5_chr21:
             pipeline:
                 - Tsb:
-                      params: "--molecule-count 500000 --molecule-prefix C5: -s 45"
+                      params: "--molecule-count 25000 --molecule-prefix C5: -s 45"
                       model: MCF7_chr21
         S1_chr21:
             pipeline:
@@ -113,11 +113,58 @@ TKSM:
                 - Tag:
                       params: "--format5 AAGCAGTGGTATCAACGCAGAGTACATGGG --format3 AGATCGGAAGAGCGTCGTGTAG"
                 - PCR:
-                      params: "--cycles 5 --molecule-count 5000000 -x Taq-setting1"
+                      params: "--cycles 5 --molecule-count 250000 -x Taq-setting1"
                 - Flp:
                       params: "-p 0.5"
                 - Tag:
                       params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
+                - Shf:
+                      params: ""
+                - Seq:
+                      params: "--skip-qual-compute"
+        S1_chr21_noTrc:
+            pipeline:
+                - Mrg:
+                      sources: ["C1_chr21", "C2_chr21", "C3_chr21", "C4_chr21", "C5_chr21"]
+                - plA:
+                      params: "--normal=15,7.5"
+                - Tag:
+                      params: "--format3 10"
+                - SCB:
+                      params: ""
+                - Tag:
+                      params: "--format5 AAGCAGTGGTATCAACGCAGAGTACATGGG --format3 AGATCGGAAGAGCGTCGTGTAG"
+                - PCR:
+                      params: "--cycles 5 --molecule-count 250000 -x Taq-setting1"
+                - Flp:
+                      params: "-p 0.5"
+                - Tag:
+                      params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
+                - Shf:
+                      params: ""
+                - Seq:
+                      params: "--skip-qual-compute"
+        S1_chr21_FinTrc:
+            pipeline:
+                - Mrg:
+                      sources: ["C1_chr21", "C2_chr21", "C3_chr21", "C4_chr21", "C5_chr21"]
+                - plA:
+                      params: "--normal=15,7.5"
+                - Tag:
+                      params: "--format3 10"
+                - SCB:
+                      params: ""
+                - Tag:
+                      params: "--format5 AAGCAGTGGTATCAACGCAGAGTACATGGG --format3 AGATCGGAAGAGCGTCGTGTAG"
+                - PCR:
+                      params: "--cycles 5 --molecule-count 250000 -x Taq-setting1"
+                - Flp:
+                      params: "-p 0.5"
+                - Tag:
+                      params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
+                - Trc:
+                      params: ""
+                      model: MCF7
                 - Shf:
                       params: ""
                 - Seq:

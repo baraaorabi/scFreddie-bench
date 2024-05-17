@@ -1,4 +1,5 @@
 import gzip
+import format_time
 
 output_d = f"{config['outpath']}/FLAMES"
 
@@ -9,6 +10,14 @@ minimap2_tools_list = [
 ]
 
 
+rule make_time:
+    output:
+        time=f"{output_d}/time.tsv",
+    run:
+        with open(output.time, "w+") as fout:
+            print(format_time.header_str, file=fout)
+
+
 rule isoforms:
     input:
         fastq=f"{output_d}/preprocess/{{sample}}.cb_matched.fastq.gz",
@@ -16,6 +25,7 @@ rule isoforms:
         dna=lambda wc: config["samples"][wc.sample]["DNA"],
         minimap2_tools=[f"{output_d}/exec/{t}" for t in minimap2_tools_list],
         script=config["FLAMES"]["exec"],
+        time=ancient(f"{output_d}/time.tsv"),
     params:
         minimap2_tools=f"{output_d}/exec",
     output:
@@ -24,7 +34,12 @@ rule isoforms:
         ),
     conda:
         "envs/flames.yaml"
+    resources:
+        mem="128G",
+        time=72 * 60 - 1,
+    threads: 12
     shell:
+        f"{format_time.format_gnu_time_string(process='FLAMES_isoforms')}"
         "{input.script}"
         " -a {input.gtf}"
         " -i {input.fastq}"
@@ -38,6 +53,7 @@ rule match:
         script=f"{output_d}/exec/match_cell_barcodes",
         cb=f"{output_d}/preprocess/{{sample}}.bc_whitelist.tsv",
         fastq=f"{output_d}/preprocess/{{sample}}_fastqs/1.fastq",
+        time=ancient(f"{output_d}/time.tsv"),
     output:
         tsv=f"{output_d}/preprocess/{{sample}}.cb_stats.tsv",
         fastq=f"{output_d}/preprocess/{{sample}}.cb_matched.fastq.gz",
@@ -46,7 +62,11 @@ rule match:
         fastq_dir=f"{output_d}/preprocess/{{sample}}_fastqs",
     conda:
         "envs/flames.yaml"
+    resources:
+        mem="128G",
+        time=24 * 60 - 1,
     shell:
+        f"{format_time.format_gnu_time_string(process='FLAMES_match')}"
         "{input.script}"
         " {params.fastq_dir}"
         " {output.tsv}"
@@ -102,11 +122,13 @@ rule scTagger_extract_bc:
     input:
         tsv=f"{output_d}/preprocess/{{sample}}.lr_bc.tsv.gz",
         cb=lambda wc: config["samples"][wc.sample]["CB"],
+        time=ancient(f"{output_d}/time.tsv"),
     output:
         tsv=f"{output_d}/preprocess/{{sample}}.bc_whitelist.tsv.gz",
     conda:
         "envs/sctagger.yaml"
     shell:
+        f"{format_time.format_gnu_time_string(process='FLAMES_scTagger_extract_bc')}"
         "scTagger.py extract_sr_bc_from_lr"
         " -i {input.tsv}"
         " -wl {input.cb}"
@@ -116,12 +138,14 @@ rule scTagger_extract_bc:
 rule scTagger_lr_seg:
     input:
         fastq=lambda wc: config["samples"][wc.sample]["FASTQ"],
+        time=ancient(f"{output_d}/time.tsv"),
     output:
         tsv=f"{output_d}/preprocess/{{sample}}.lr_bc.tsv.gz",
     threads: 32
     conda:
         "envs/sctagger.yaml"
     shell:
+        f"{format_time.format_gnu_time_string(process='FLAMES_scTagger_lr_seg')}"
         "scTagger.py extract_lr_bc"
         " -r {input.fastq}"
         " -o {output.tsv}"

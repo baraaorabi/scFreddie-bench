@@ -17,10 +17,10 @@ def parse_args():
         help="Input: scTagger matches TSV",
     )
     parser.add_argument(
-        "-truth_tsv",
+        "-cb_tsv",
         type=str,
         required=True,
-        help="Input: truth TSV",
+        help="Input: cell barcode to cell lines/types TSV",
     )
     parser.add_argument(
         "-o",
@@ -36,13 +36,13 @@ def parse_args():
 def main():
     args = parse_args()
     cb_to_celltypes = defaultdict(set)
-    with open(args.truth_tsv, "r") as f:
+    with open(args.cb_tsv, "r") as f:
         f.readline()
-        for line in tqdm(f, desc=f"Reading {args.truth_tsv}"):
-            rname, _, _, cb, ct = line.strip().split()
+        for line in tqdm(f, desc=f"Reading {args.cb_tsv}"):
+            cb, cts = line.strip().split()
             if cb == ".":
                 continue
-            cb_to_celltypes[cb].update(ct.split(","))
+            cb_to_celltypes[cb].update(cts.split(","))
 
     rname_to_celltypes = defaultdict(set)
     with gzip.open(args.lr_matches_tsv, "rt") as f:
@@ -52,8 +52,10 @@ def main():
                 rname_to_celltypes[rname].update(cb_to_celltypes[bc])
 
     with open(args.o, "w+") as f:
-        for rname, celltypes in tqdm(rname_to_celltypes.items(), desc=f"Writing {args.o}"):
-            f.write(f"{rname}\t{','.join(celltypes)}\n")
+        for rname, celltypes in tqdm(
+            rname_to_celltypes.items(), desc=f"Writing {args.o}"
+        ):
+            f.write(f"{rname}\t{','.join(sorted(celltypes))}\n")
 
 
 if __name__ == "__main__":

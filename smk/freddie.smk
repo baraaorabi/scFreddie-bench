@@ -1,4 +1,4 @@
-import format_time
+import smk_utils
 
 output_d = f"{config['outpath']}/freddie"
 
@@ -8,7 +8,7 @@ rule make_time:
         time=f"{output_d}/time.tsv",
     run:
         with open(output.time, "w+") as fout:
-            print(format_time.header_str, file=fout)
+            print(smk_utils.time_header_str, file=fout)
 
 
 rule isoforms:
@@ -27,7 +27,7 @@ rule isoforms:
     conda:
         "envs/freddie.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='freddie_isoforms')}"
+        f"{smk_utils.format_gnu_time_string(process='freddie_isoforms')}"
         "{params.script}"
         " --rname-to-celltypes {input.rname_to_celltypes}"
         " --bam {input.bam}"
@@ -38,7 +38,7 @@ rule isoforms:
 rule rname_to_celltypes:
     input:
         lr_tsv=f"{output_d}/preprocess/{{sample}}.lr_matches.tsv.gz",
-        truth=lambda wc: config["samples"][wc.sample]["truth"],
+        cb_tsv=lambda wc: config["samples"][wc.sample]["cb_to_celltype"],
     output:
         tsv=f"{output_d}/preprocess/{{sample}}.rname_to_celltypes.tsv",
     params:
@@ -48,7 +48,7 @@ rule rname_to_celltypes:
     shell:
         "python {params.script}"
         " -lr {input.lr_tsv}"
-        " -truth {input.truth}"
+        " -cb_tsv {input.cb_tsv}"
         " -o {output.tsv}"
 
 
@@ -63,7 +63,7 @@ rule scTagger_match:
     conda:
         "envs/sctagger.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='freddie_scTagger_match')}"
+        f"{smk_utils.format_gnu_time_string(process='freddie_scTagger_match')}"
         "scTagger.py match_trie"
         " -lr {input.lr_tsv}"
         " -sr {input.wl_tsv}"
@@ -81,7 +81,7 @@ rule scTagger_extract_bc:
     conda:
         "envs/sctagger.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='freddie_scTagger_extract_bc')}"
+        f"{smk_utils.format_gnu_time_string(process='freddie_scTagger_extract_bc')}"
         "scTagger.py extract_sr_bc_from_lr"
         " -i {input.tsv}"
         " -wl {input.cb}"
@@ -98,7 +98,7 @@ rule scTagger_lr_seg:
     conda:
         "envs/sctagger.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='freddie_scTagger_lr_seg')}"
+        f"{smk_utils.format_gnu_time_string(process='freddie_scTagger_lr_seg')}"
         "scTagger.py extract_lr_bc"
         " -r {input.fastq}"
         " -o {output.tsv}"
@@ -120,7 +120,7 @@ rule minimap2:
     conda:
         "envs/minimap2.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='freddie_minimap2')}"
+        f"{smk_utils.format_gnu_time_string(process='freddie_minimap2')}"
         "minimap2 -a -x splice -t {threads} {input.genome} {input.reads} | "
         "  samtools sort -T {output.bam}.tmp -@ {threads} -O bam - > {output.bam} && "
         "  samtools index {output.bam}"

@@ -56,31 +56,42 @@ for x in config["TKSM"]["experiments"]:
             "DNA": TKSM_smk.get_sample_ref(x, "DNA"),
             "cDNA": TKSM_smk.get_sample_ref(x, "cDNA"),
             "GTF": TKSM_smk.get_sample_ref(x, "GTF"),
-            "MDFs": TKSM_smk.get_source_mdfs(x),
+            "tsb_MDFs": TKSM_smk.get_source_mdfs(x),
+            "fin_MDF": final_file[: -len(".Seq.fastq")] + ".mdf",
             "CB": config["TKSM"]["refs"]["barcodes"]["10x"],
-            "truth": f"{output_d}/truth/{x}.tsv",
+            "truth": f"{output_d}/truth/{x}.truth.tsv",
+            "cb_to_celltype": f"{output_d}/truth/{x}.cb_to_celltypes.tsv",
         }
 
 
 rule all:
     input:
-        [f for s in config["samples"].values() for f in s.values()],
         [f"{output_d}/freddie/{s}.isoforms.gtf" for s in config["samples"]],
-        [f"{output_d}/FLAMES/{s}" for s in config["samples"]],
-        [f"{output_d}/scNanoGPS/{s}/matrix_isoform.tsv" for s in config["samples"]],
-        [f"{output_d}/scNanoGPS/{s}/read_length.png" for s in config["samples"]],
-        [f"{output_d}/scNanoGPS/{s}/first_tail.fastq.gz" for s in config["samples"]],
+        [
+            f"{output_d}/FLAMES/{s}_r{r}"
+            for s in config["samples"]
+            for r in config["ref_sample_rates"]
+        ],
+        [
+            f"{output_d}/scNanoGPS/{s}_r{r}/matrix_isoform.tsv"
+            for s in config["samples"]
+            for r in config["ref_sample_rates"]
+        ],
     default_target: True
 
 
 rule ground_truth_files:
     input:
         fastq=lambda wc: config["samples"][wc.exprmnt]["FASTQ"],
-        mdfs=lambda wc: config["samples"][wc.exprmnt]["MDFs"],
+        tsb_mdfs=lambda wc: config["samples"][wc.exprmnt]["tsb_MDFs"],
+        fin_mdf=lambda wc: config["samples"][wc.exprmnt]["fin_MDF"],
     output:
-        truth=f"{output_d}/truth/{{exprmnt}}.tsv",
+        truth_tsv=f"{output_d}/truth/{{exprmnt}}.truth.tsv",
+        cb_tsv=f"{output_d}/truth/{{exprmnt}}.cb_to_celltypes.tsv",
     shell:
         "python py/ground_truth_files.py"
         " -fastq {input.fastq}"
-        " -mdfs {input.mdfs}"
-        " -o {output.truth}"
+        " -tsb_mdfs {input.tsb_mdfs}"
+        " -fin_mdf {input.fin_mdf}"
+        " -truth_tsv {output.truth_tsv}"
+        " -cb_tsv {output.cb_tsv}"

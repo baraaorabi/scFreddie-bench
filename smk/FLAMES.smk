@@ -1,5 +1,5 @@
 import gzip
-import format_time
+import smk_utils
 
 output_d = f"{config['outpath']}/FLAMES"
 
@@ -15,13 +15,28 @@ rule make_time:
         time=f"{output_d}/time.tsv",
     run:
         with open(output.time, "w+") as fout:
-            print(format_time.header_str, file=fout)
+            print(smk_utils.time_header_str, file=fout)
+
+
+rule sample_gtf:
+    input:
+        gtf=lambda wc: config["samples"][wc.sample]["GTF"],
+    output:
+        gtf=f"{output_d}/preprocess/{{sample}}.r{{rate}}.gtf",
+    run:
+        with open(output.gtf, "w+") as outfile:
+            smk_utils.sample_gtf(
+                gtf=input.gtf,
+                rate=float(wildcards.rate),
+                outfile=outfile,
+            )
+            outfile.close()
 
 
 rule isoforms:
     input:
         fastq=f"{output_d}/preprocess/{{sample}}.cb_matched.fastq.gz",
-        gtf=lambda wc: config["samples"][wc.sample]["GTF"],
+        gtf=f"{output_d}/preprocess/{{sample}}.r{{rate}}.gtf",
         dna=lambda wc: config["samples"][wc.sample]["DNA"],
         minimap2_tools=[f"{output_d}/exec/{t}" for t in minimap2_tools_list],
         script=config["FLAMES"]["exec"],
@@ -30,7 +45,7 @@ rule isoforms:
         minimap2_tools=f"{output_d}/exec",
     output:
         directory(
-            f"{output_d}/{{sample}}",
+            f"{output_d}/{{sample}}_r{{rate}}",
         ),
     conda:
         "envs/flames.yaml"
@@ -39,7 +54,7 @@ rule isoforms:
         time=72 * 60 - 1,
     threads: 12
     shell:
-        f"{format_time.format_gnu_time_string(process='FLAMES_isoforms')}"
+        f"{smk_utils.format_gnu_time_string(process='FLAMES_isoforms', sample='{wildcards.sample}_r{wildcards.rate}')}"
         "{input.script}"
         " -a {input.gtf}"
         " -i {input.fastq}"
@@ -66,7 +81,7 @@ rule match:
         mem="128G",
         time=24 * 60 - 1,
     shell:
-        f"{format_time.format_gnu_time_string(process='FLAMES_match')}"
+        f"{smk_utils.format_gnu_time_string(process='FLAMES_match')}"
         "{input.script}"
         " {params.fastq_dir}"
         " {output.tsv}"
@@ -128,7 +143,7 @@ rule scTagger_extract_bc:
     conda:
         "envs/sctagger.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='FLAMES_scTagger_extract_bc')}"
+        f"{smk_utils.format_gnu_time_string(process='FLAMES_scTagger_extract_bc')}"
         "scTagger.py extract_sr_bc_from_lr"
         " -i {input.tsv}"
         " -wl {input.cb}"
@@ -145,7 +160,7 @@ rule scTagger_lr_seg:
     conda:
         "envs/sctagger.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='FLAMES_scTagger_lr_seg')}"
+        f"{smk_utils.format_gnu_time_string(process='FLAMES_scTagger_lr_seg')}"
         "scTagger.py extract_lr_bc"
         " -r {input.fastq}"
         " -o {output.tsv}"

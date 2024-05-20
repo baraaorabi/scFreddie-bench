@@ -1,5 +1,13 @@
 outpath: output
 
+ref_sample_rates:
+    - "0.01"
+    - "0.20"
+    - "0.40"
+    - "0.60"
+    - "0.80"
+    - "1.00"
+
 freddie:
     exec: extern/freddie/freddie.py
     rname_to_celltypes: py/rname_to_celltypes.py
@@ -53,9 +61,6 @@ TKSM:
                       sources: ["C1", "C2", "C3", "C4", "C5"]
                 - plA:
                       params: "--normal=15,7.5"
-                - Trc:
-                      params: ""
-                      model: MCF7
                 - Tag:
                       params: "--format3 10"
                 - SCB:
@@ -68,6 +73,9 @@ TKSM:
                       params: "-p 0.5"
                 - Tag:
                       params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
+                - Trc:
+                      params: ""
+                      model: MCF7
                 - Shf:
                       params: ""
                 - Seq:
@@ -98,53 +106,6 @@ TKSM:
                       params: "--molecule-count 25000 --molecule-prefix C5: -s 45"
                       model: MCF7_chr21
         S1_chr21:
-            pipeline:
-                - Mrg:
-                      sources: ["C1_chr21", "C2_chr21", "C3_chr21", "C4_chr21", "C5_chr21"]
-                - plA:
-                      params: "--normal=15,7.5"
-                - Trc:
-                      params: ""
-                      model: MCF7
-                - Tag:
-                      params: "--format3 10"
-                - SCB:
-                      params: ""
-                - Tag:
-                      params: "--format5 AAGCAGTGGTATCAACGCAGAGTACATGGG --format3 AGATCGGAAGAGCGTCGTGTAG"
-                - PCR:
-                      params: "--cycles 5 --molecule-count 250000 -x Taq-setting1"
-                - Flp:
-                      params: "-p 0.5"
-                - Tag:
-                      params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
-                - Shf:
-                      params: ""
-                - Seq:
-                      params: "--skip-qual-compute"
-        S1_chr21_noTrc:
-            pipeline:
-                - Mrg:
-                      sources: ["C1_chr21", "C2_chr21", "C3_chr21", "C4_chr21", "C5_chr21"]
-                - plA:
-                      params: "--normal=15,7.5"
-                - Tag:
-                      params: "--format3 10"
-                - SCB:
-                      params: ""
-                - Tag:
-                      params: "--format5 AAGCAGTGGTATCAACGCAGAGTACATGGG --format3 AGATCGGAAGAGCGTCGTGTAG"
-                - PCR:
-                      params: "--cycles 5 --molecule-count 250000 -x Taq-setting1"
-                - Flp:
-                      params: "-p 0.5"
-                - Tag:
-                      params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
-                - Shf:
-                      params: ""
-                - Seq:
-                      params: "--skip-qual-compute"
-        S1_chr21_FinTrc:
             pipeline:
                 - Mrg:
                       sources: ["C1_chr21", "C2_chr21", "C3_chr21", "C4_chr21", "C5_chr21"]

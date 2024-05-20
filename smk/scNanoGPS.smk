@@ -1,4 +1,4 @@
-import format_time
+import smk_utils
 
 output_d = f"{config['outpath']}/scNanoGPS"
 
@@ -8,7 +8,22 @@ rule make_time:
         time=f"{output_d}/time.tsv",
     run:
         with open(output.time, "w+") as fout:
-            print(format_time.header_str, file=fout)
+            print(smk_utils.time_header_str, file=fout)
+
+
+rule sample_gtf:
+    input:
+        gtf=lambda wc: config["samples"][wc.sample]["GTF"],
+    output:
+        gtf=f"{output_d}/preprocess/{{sample}}.r{{rate}}.gtf",
+    run:
+        with open(output.gtf, "w+") as outfile:
+            smk_utils.sample_gtf(
+                gtf=input.gtf,
+                rate=float(wildcards.rate),
+                outfile=outfile,
+            )
+            outfile.close()
 
 
 rule read_qc:
@@ -24,7 +39,7 @@ rule read_qc:
     conda:
         "envs/scnanogps.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='scNanoGPS_read_qc')}"
+        f"{smk_utils.format_gnu_time_string(process='scNanoGPS_read_qc')}"
         "python {input.script}"
         " -i {input.fastq}"
         " -d {params.d}"
@@ -42,7 +57,7 @@ rule profile:
     conda:
         "envs/scnanogps.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='scNanoGPS_profile')}"
+        f"{smk_utils.format_gnu_time_string(process='scNanoGPS_profile')}"
         "python {input.script}"
         " -i {input.fastq}"
         " -d {params.d}"
@@ -62,7 +77,7 @@ rule scan:
     conda:
         "envs/scnanogps.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='scNanoGPS_scan')}"
+        f"{smk_utils.format_gnu_time_string(process='scNanoGPS_scan')}"
         "python {input.script}"
         " -i {input.fastq}"
         " -d {params.d}"
@@ -82,7 +97,7 @@ rule assign:
     conda:
         "envs/scnanogps.yaml"
     shell:
-        f"{format_time.format_gnu_time_string(process='scNanoGPS_assign')}"
+        f"{smk_utils.format_gnu_time_string(process='scNanoGPS_assign')}"
         "python {input.script}"
         " -d {params.d}"
         " -t {threads}"
@@ -96,7 +111,7 @@ rule minimap2_index:
         index=f"{output_d}/{{sample}}/ref_genome.mmi",
     threads: 32
     shell:
-        f"{format_time.format_gnu_time_string(process='scNanoGPS_minimap2_index')}"
+        f"{smk_utils.format_gnu_time_string(process='scNanoGPS_minimap2_index')}"
         "minimap2 -t 32 -x map-ont -d {output.index} {input.fasta}"
 
 
@@ -120,7 +135,7 @@ rule curate:
         mem="128G",
         time=72 * 60 - 1,
     shell:
-        f"{format_time.format_gnu_time_string(process='scNanoGPS_curate')}"
+        f"{smk_utils.format_gnu_time_string(process='scNanoGPS_curate')}"
         "python {input.script}"
         " -d {params.d}"
         " --ref_genome {input.dna}"
@@ -132,13 +147,13 @@ rule curate:
 rule expression:
     input:
         script=config["scNanoGPS"]["expression"],
-        gtf=lambda wc: config["samples"][wc.sample]["GTF"],
+        gtf=f"{output_d}/preprocess/{{sample}}.r{{rate}}.gtf",
         tmp_dir=f"{output_d}/{{sample}}/tmp",
         time=ancient(f"{output_d}/time.tsv"),
     output:
-        filtered_barcode_list=f"{output_d}/{{sample}}/filtered_barcode_list.txt",
+        filtered_barcode_list=f"{output_d}/{{sample}}_r{{rate}}/filtered_barcode_list.txt",
     params:
-        d=f"{output_d}/{{sample}}",
+        d=f"{output_d}/{{sample}}_r{{rate}}",
     threads: 32
     conda:
         "envs/scnanogps.yaml"
@@ -146,22 +161,23 @@ rule expression:
         mem="128G",
         time=24 * 60 - 1,
     shell:
-        f"{format_time.format_gnu_time_string(process='scNanoGPS_expression')}"
+        f"{smk_utils.format_gnu_time_string(process='scNanoGPS_expression', sample='{wildcards.sample}_r{wildcards.rate}')}"
         "python {input.script}"
         " -d {params.d}"
         " --gtf {input.gtf}"
         " --tmp_dir {input.tmp_dir}"
+        " --min_gene_no 1"
         " -t {threads}"
 
 
 rule liqa_refgene:
     input:
-        gtf=lambda wc: config["samples"][wc.sample]["GTF"],
+        gtf=f"{output_d}/preprocess/{{sample}}.r{{rate}}.gtf",
         time=ancient(f"{output_d}/time.tsv"),
     output:
-        liqa_refgene=f"{output_d}/{{sample}}/liqa.refgene",
+        liqa_refgene=f"{output_d}/{{sample}}_r{{rate}}/liqa.refgene",
     shell:
-        f"{format_time.format_gnu_time_string(process='scNanoGPS_liqa_refgene')}"
+        f"{smk_utils.format_gnu_time_string(process='scNanoGPS_liqa_refgene', sample='{wildcards.sample}_r{wildcards.rate}')}"
         "liqa -task refgene"
         " -format gtf"
         " -ref {input.gtf}"
@@ -171,14 +187,14 @@ rule liqa_refgene:
 rule isoforms:
     input:
         script=config["scNanoGPS"]["isoforms"],
-        filtered_barcode_list=f"{output_d}/{{sample}}/filtered_barcode_list.txt",
-        liqa_refgene=f"{output_d}/{{sample}}/liqa.refgene",
+        filtered_barcode_list=f"{output_d}/{{sample}}_r{{rate}}/filtered_barcode_list.txt",
+        liqa_refgene=f"{output_d}/{{sample}}_r{{rate}}/liqa.refgene",
         tmp_dir=f"{output_d}/{{sample}}/tmp",
         time=ancient(f"{output_d}/time.tsv"),
     output:
-        matrix_isoform=f"{output_d}/{{sample}}/matrix_isoform.tsv",
+        matrix_isoform=f"{output_d}/{{sample}}_r{{rate}}/matrix_isoform.tsv",
     params:
-        d=f"{output_d}/{{sample}}",
+        d=f"{output_d}/{{sample}}_r{{rate}}",
     threads: 32
     conda:
         "envs/scnanogps.yaml"
@@ -186,9 +202,11 @@ rule isoforms:
         mem="128G",
         time=24 * 60 - 1,
     shell:
-        f"{format_time.format_gnu_time_string(process='scNanoGPS_isoforms')}"
+        f"{smk_utils.format_gnu_time_string(process='scNanoGPS_isoforms', sample='{wildcards.sample}_r{wildcards.rate}')}"
         "python {input.script}"
         " --liqa_ref {input.liqa_refgene}"
         " --tmp_dir {input.tmp_dir}"
         " -d {params.d}"
+        " --liqa_o .r{wildcards.rate}.liqa.tsv"
+        " --liqa_log .r{wildcards.rate}.liqa.log"
         " -t {threads}"

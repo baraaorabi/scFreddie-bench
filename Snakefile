@@ -66,6 +66,7 @@ for x in config["TKSM"]["experiments"]:
 
 rule all:
     input:
+        [f"{output_d}/truth/{s}.isoforms_stats.tsv" for s in config["samples"]],
         [f"{output_d}/freddie/{s}.isoforms.gtf" for s in config["samples"]],
         [
             f"{output_d}/FLAMES/{s}_r{r}"
@@ -95,3 +96,18 @@ rule ground_truth_files:
         " -fin_mdf {input.fin_mdf}"
         " -truth_tsv {output.truth_tsv}"
         " -cb_tsv {output.cb_tsv}"
+
+
+rule truth_isoform_stats:
+    input:
+        bam=f"{output_d}/freddie/preprocess/{{exprmnt}}.sorted.bam",
+        truth_tsv=f"{output_d}/truth/{{exprmnt}}.truth.tsv",
+        gtf=lambda wc: config["samples"][wc.exprmnt]["GTF"],
+    output:
+        tsv=f"{output_d}/truth/{{exprmnt}}.isoforms_stats.tsv",
+    shell:
+        "python py/truth_isoform_stats.py"
+        " -bam {input.bam}"
+        " -truth_tsv {input.truth_tsv}"
+        " -gtf {input.gtf}"
+        " -o {output.tsv}"

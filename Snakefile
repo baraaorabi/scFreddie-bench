@@ -69,7 +69,7 @@ rule all:
         [f"{output_d}/truth/{s}.isoforms_stats.tsv" for s in config["samples"]],
         [f"{output_d}/freddie/{s}.isoforms.gtf" for s in config["samples"]],
         [
-            f"{output_d}/FLAMES/{s}_r{r}"
+            f"{output_d}/post/{s}/FLAMES_r{r}.tsv"
             for s in config["samples"]
             for r in config["ref_sample_rates"]
         ],
@@ -83,6 +83,7 @@ rule all:
 
 rule ground_truth_files:
     input:
+        script="py/ground_truth_files.py",
         fastq=lambda wc: config["samples"][wc.exprmnt]["FASTQ"],
         tsb_mdfs=lambda wc: config["samples"][wc.exprmnt]["tsb_MDFs"],
         fin_mdf=lambda wc: config["samples"][wc.exprmnt]["fin_MDF"],
@@ -90,7 +91,7 @@ rule ground_truth_files:
         truth_tsv=f"{output_d}/truth/{{exprmnt}}.truth.tsv",
         cb_tsv=f"{output_d}/truth/{{exprmnt}}.cb_to_celltypes.tsv",
     shell:
-        "python py/ground_truth_files.py"
+        "python {input.script}"
         " -fastq {input.fastq}"
         " -tsb_mdfs {input.tsb_mdfs}"
         " -fin_mdf {input.fin_mdf}"
@@ -100,14 +101,33 @@ rule ground_truth_files:
 
 rule truth_isoform_stats:
     input:
+        script="py/truth_isoform_stats.py",
         bam=f"{output_d}/freddie/preprocess/{{exprmnt}}.sorted.bam",
         truth_tsv=f"{output_d}/truth/{{exprmnt}}.truth.tsv",
         gtf=lambda wc: config["samples"][wc.exprmnt]["GTF"],
     output:
         tsv=f"{output_d}/truth/{{exprmnt}}.isoforms_stats.tsv",
     shell:
-        "python py/truth_isoform_stats.py"
+        "python {input.script}"
         " -bam {input.bam}"
         " -truth_tsv {input.truth_tsv}"
         " -gtf {input.gtf}"
+        " -o {output.tsv}"
+
+
+rule post_FLAMES:
+    input:
+        script="py/post_FLAMES.py",
+        flames_dir=f"{output_d}/FLAMES/{{exprmnt}}_r{{rate}}",
+        cb_tsv=f"{output_d}/truth/{{exprmnt}}.cb_to_celltypes.tsv",
+    output:
+        tsv=f"{output_d}/post/{{exprmnt}}/FLAMES_r{{rate}}.tsv",
+    params:
+        gff3=f"{output_d}/FLAMES/{{exprmnt}}_r{{rate}}/isoform_annotated.filtered.gff3",
+        csv=f"{output_d}/FLAMES/{{exprmnt}}_r{{rate}}/transcript_count.csv.gz",
+    shell:
+        "python {input.script}"
+        " -gff3 {params.gff3}"
+        " -csv {params.csv}"
+        " -cb_to_celltypes {input.cb_tsv}"
         " -o {output.tsv}"

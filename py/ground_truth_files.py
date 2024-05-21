@@ -152,10 +152,13 @@ def write_cb_tsv(
 ):
     outfile = open(cb_tsv, "w+")
     for cb, cell_lines in cb_to_cell_lines.items():
+        if len(cell_lines) == 0:
+            continue
         print(
             cb,
             ",".join(sorted(cell_lines)),
             file=outfile,
+            sep="\t",
         )
     outfile.close()
 

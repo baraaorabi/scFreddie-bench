@@ -69,14 +69,13 @@ rule all:
         [f"{output_d}/truth/{s}.isoforms_stats.tsv" for s in config["samples"]],
         [f"{output_d}/freddie/{s}.isoforms.gtf" for s in config["samples"]],
         [
-            f"{output_d}/post/{s}/FLAMES_r{r}.tsv"
+            f"{output_d}/post/{s}/{t}_r{r}.tsv"
             for s in config["samples"]
             for r in config["ref_sample_rates"]
-        ],
-        [
-            f"{output_d}/scNanoGPS/{s}_r{r}/matrix_isoform.tsv"
-            for s in config["samples"]
-            for r in config["ref_sample_rates"]
+            for t in [
+                "FLAMES",
+                "scNanoGPS",
+            ]
         ],
     default_target: True
 
@@ -129,5 +128,21 @@ rule post_FLAMES:
         "python {input.script}"
         " -gff3 {params.gff3}"
         " -csv {params.csv}"
+        " -cb_to_celltypes {input.cb_tsv}"
+        " -o {output.tsv}"
+
+
+rule post_scNanoGPS:
+    input:
+        script="py/post_scNanoGPS.py",
+        gtf=f"{output_d}/scNanoGPS/preprocess/{{exprmnt}}.r{{rate}}.gtf",
+        tsv=f"{output_d}/scNanoGPS/{{exprmnt}}_r{{rate}}/matrix_isoform.tsv",
+        cb_tsv=f"{output_d}/truth/{{exprmnt}}.cb_to_celltypes.tsv",
+    output:
+        tsv=f"{output_d}/post/{{exprmnt}}/scNanoGPS_r{{rate}}.tsv",
+    shell:
+        "python {input.script}"
+        " -gtf {input.gtf}"
+        " -tsv {input.tsv}"
         " -cb_to_celltypes {input.cb_tsv}"
         " -o {output.tsv}"

@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 from collections import defaultdict
-import gzip
-import os
 from tqdm import tqdm
-
-
-from tqdm import tqdm
-from collections import defaultdict
 
 
 def parse_args():

@@ -67,14 +67,17 @@ for x in config["TKSM"]["experiments"]:
 rule all:
     input:
         [f"{output_d}/truth/{s}.isoforms_stats.tsv" for s in config["samples"]],
-        [f"{output_d}/freddie/{s}.isoforms.gtf" for s in config["samples"]],
         [
-            f"{output_d}/post/{s}/{t}_r{r}.tsv"
+            f"{output_d}/post/{s}/{t}.tsv"
             for s in config["samples"]
-            for r in config["ref_sample_rates"]
             for t in [
-                "FLAMES",
-                "scNanoGPS",
+                "freddie",
+                "truth",
+            ]
+            + [
+                f"{T}_r{r}"
+                for T in ["FLAMES", "scNanoGPS"]
+                for r in config["ref_sample_rates"]
             ]
         ],
     default_target: True
@@ -98,14 +101,14 @@ rule ground_truth_files:
         " -cb_tsv {output.cb_tsv}"
 
 
-rule truth_isoform_stats:
+rule post_truth:
     input:
-        script="py/truth_isoform_stats.py",
+        script="py/post_truth.py",
         bam=f"{output_d}/freddie/preprocess/{{exprmnt}}.sorted.bam",
         truth_tsv=f"{output_d}/truth/{{exprmnt}}.truth.tsv",
         gtf=lambda wc: config["samples"][wc.exprmnt]["GTF"],
     output:
-        tsv=f"{output_d}/truth/{{exprmnt}}.isoforms_stats.tsv",
+        tsv=f"{output_d}/post/{{exprmnt}}/truth.tsv",
     shell:
         "python {input.script}"
         " -bam {input.bam}"
@@ -144,5 +147,19 @@ rule post_scNanoGPS:
         "python {input.script}"
         " -gtf {input.gtf}"
         " -tsv {input.tsv}"
+        " -cb_to_celltypes {input.cb_tsv}"
+        " -o {output.tsv}"
+
+
+rule post_freddie:
+    input:
+        script="py/post_freddie.py",
+        gtf=f"{output_d}/freddie/{{exprmnt}}.isoforms.gtf",
+        cb_tsv=f"{output_d}/truth/{{exprmnt}}.cb_to_celltypes.tsv",
+    output:
+        tsv=f"{output_d}/post/{{exprmnt}}/freddie.tsv",
+    shell:
+        "python {input.script}"
+        " -gtf {input.gtf}"
         " -cb_to_celltypes {input.cb_tsv}"
         " -o {output.tsv}"

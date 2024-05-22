@@ -72,7 +72,7 @@ def get_gtf_data(gtf: str):
 def add_mapping_info(bam, tid_to_gidx, gene_tree, reads):
     rid_to_ridx = {rid: idx for idx, rid in enumerate(reads.read_id)}
     maps_to_gene = [False] * len(rid_to_ridx)
-    for aln in tqdm(pysam.AlignmentFile(bam)):
+    for aln in tqdm(pysam.AlignmentFile(bam), desc=f"Reading {bam}"):
         if aln.is_supplementary or aln.is_secondary or aln.is_unmapped:
             continue
         ridx = rid_to_ridx[aln.query_name]
@@ -88,31 +88,63 @@ def add_mapping_info(bam, tid_to_gidx, gene_tree, reads):
     reads["maps_to_gene"] = maps_to_gene
 
 
-def get_transcript_counts(reads):
-    transcripts = (
-        reads.groupby(["transcript_id", "cell_lines"])
-        .agg(
-            dict(
-                read_id="count",
-                maps_to_gene="sum",
-            )
-        )
-        .reset_index()
-        .rename(
-            columns=dict(
-                cell_lines="cell_type",
-                read_id="read_count",
-                maps_to_gene="mapping_read_count",
-            )
-        )
+def get_transcripts(reads, tid_to_intervals):
+    CTs = sorted(set(reads["cell_lines"]))
+    tids = sorted(set(reads["transcript_id"]))
+    transcripts = pd.DataFrame(
+        columns=[
+            "transcript_id",
+        ]
+        + CTs
+        + ["contig", "intervals"],
     )
+    transcripts["transcript_id"] = tids
+    for ct in CTs:
+        transcripts[ct] = 0
+    transcripts["contig"] = ""
+    transcripts["intervals"] = ""
+    transcripts = transcripts.set_index("transcript_id", verify_integrity=True)
 
+    for tid, (contig, intervals) in tid_to_intervals.items():
+        if not tid in transcripts.index:
+            continue
+        transcripts.at[tid, "contig"] = contig
+        transcripts.at[tid, "intervals"] = ",".join([f"{s}-{e}" for s, e in intervals])
+
+    for _, read in tqdm(reads.iterrows(), total=len(reads), desc="Counting reads"):
+        if read["maps_to_gene"]:
+            ct = read["cell_lines"]
+            tid = read["transcript_id"]
+            transcripts.at[tid, ct] += 1
+    transcripts = transcripts.sort_values(["contig", "intervals"]).reset_index()
     return transcripts
+
+
+def get_tid_to_intervals(gtf):
+    tid_to_intervals: dict[str, tuple[str, list[tuple[int, int]]]] = dict()
+    tid = ""
+    for line in open(gtf):
+        if line.startswith("#"):
+            continue
+        line = line.rstrip("\n").split("\t")
+        contig = line[0]
+        info = line[8]
+        info = [x.strip().split(" ") for x in info.strip(";").split(";")]
+        info = {x[0]: x[1].strip('"') for x in info}
+        if line[2] == "transcript":
+            tid = info["transcript_id"]
+            tid_to_intervals[tid] = (contig, list())
+        elif line[2] == "exon":
+            assert tid == info["transcript_id"]
+            start = int(line[3]) - 1
+            end = int(line[4])
+            tid_to_intervals[tid][1].append((start, end))
+    return tid_to_intervals
 
 
 def main():
     args = parse_args()
-    tid_to_gidx, gene_tree = get_gtf_data(args.gtf)
+    tid_to_gidx, gene_tree = get_gtf_data(gtf=args.gtf)
     reads = (
         pd.read_csv(
             args.truth_tsv,
@@ -125,11 +157,19 @@ def main():
         .fillna("N")
     )
 
-    add_mapping_info(args.bam, tid_to_gidx, gene_tree, reads)
+    add_mapping_info(
+        bam=args.bam,
+        tid_to_gidx=tid_to_gidx,
+        gene_tree=gene_tree,
+        reads=reads,
+    )
 
     reads["cell_lines"] = reads["cell_lines"].str.split(",")
     reads = reads.explode("cell_lines", ignore_index=True)
-    transcripts = get_transcript_counts(reads)
+    transcripts = get_transcripts(
+        reads=reads,
+        tid_to_intervals=get_tid_to_intervals(gtf=args.gtf),
+    )
     transcripts.to_csv(args.o, sep="\t", index=False)
 
 

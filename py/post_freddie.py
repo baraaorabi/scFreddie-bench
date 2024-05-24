@@ -72,8 +72,6 @@ def process_gtf(gtf: str) -> tuple[
             for ct in info["cell_types"].split(","):
                 if ct == "NA":
                     ct = "N"
-                if ct.endswith("_chr21"):
-                    ct = ct[:-6]
                 tid_to_ct_counts[tid][ct] = int(info["read_support"])
         elif line[2] == "exon":
             assert tid == info["transcript_id"]

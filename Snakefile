@@ -63,23 +63,23 @@ for x in config["TKSM"]["experiments"]:
             "cb_to_celltype": f"{output_d}/truth/{x}.cb_to_celltypes.tsv",
         }
 
+tool_names = ["freddie"] + [
+    f"{T}_r{r}"
+    for T in [
+        "scNanoGPS",
+        "FLAMES",
+    ]
+    for r in config["ref_sample_rates"]
+]
+
 
 rule all:
     input:
-        [f"{output_d}/truth/{s}.isoforms_stats.tsv" for s in config["samples"]],
-        [
-            f"{output_d}/post/{s}/{t}.tsv"
-            for s in config["samples"]
-            for t in [
-                "freddie",
-                "truth",
-            ]
-            + [
-                f"{T}_r{r}"
-                for T in ["FLAMES", "scNanoGPS"]
-                for r in config["ref_sample_rates"]
-            ]
-        ],
+        expand(
+            f"{output_d}/eval/{{sample}}.{{ext}}",
+            sample=config["samples"],
+            ext=["pdf", "tsv"],
+        ),
     default_target: True
 
 
@@ -163,3 +163,23 @@ rule post_freddie:
         " -gtf {input.gtf}"
         " -cb_to_celltypes {input.cb_tsv}"
         " -o {output.tsv}"
+
+
+rule evaluate:
+    input:
+        script="py/evaluate.py",
+        tsvs=[f"{output_d}/post/{{sample}}/{t}.tsv" for t in tool_names],
+        truth=f"{output_d}/post/{{sample}}/truth.tsv",
+    output:
+        pdf=f"{output_d}/eval/{{sample}}.pdf",
+        tsv=f"{output_d}/eval/{{sample}}.tsv",
+    params:
+        names=tool_names,
+    shell:
+        "python {input.script}"
+        " -sample {wildcards.sample}"
+        " -tsvs {input.tsvs}"
+        " -truth {input.truth}"
+        " -names {params.names}"
+        " -pdf {output.pdf}"
+        " -tsv {output.tsv}"

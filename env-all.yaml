@@ -13,12 +13,13 @@ dependencies:
   - editdistance=0.6.2
   - gurobi=9.5.2
   - gxx=11.4.0
+  - ipykernel=6.29.3
   - longshot=1.0.0
   - matplotlib=3.5.2
   - minimap2=2.28
   - numpy=1.26.4
   - pandas=1.4.2
-  - pulp=2.7.0  
+  - pulp=2.7.0
   - pysam=0.22.0
   - python=3.10
   - qualimap=2.3
@@ -32,7 +33,7 @@ dependencies:
   - subread=2.0.6
   - tabix=1.11
   - time=1.8
-  - tksm=0.6.0
+  - tksm=0.6.1
   - tqdm=4.66.2
   - zlib=1.2.13
   - pip:

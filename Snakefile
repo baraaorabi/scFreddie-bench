@@ -63,7 +63,9 @@ for x in config["TKSM"]["experiments"]:
             "cb_to_celltype": f"{output_d}/truth/{x}.cb_to_celltypes.tsv",
         }
 
-tool_names = ["freddie"] + [
+tool_names = [
+    "freddie",
+] + [
     f"{T}_r{r}"
     for T in [
         "scNanoGPS",

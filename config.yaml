@@ -154,6 +154,41 @@ TKSM:
                       params: ""
                 - Seq:
                       params: "--skip-qual-compute"
+        Expr6:
+            pipeline:
+                - Mrg:
+                      sources: ["A1000", "B500", "C250", "D125", "E60"]
+                - plA:
+                      params: "--normal=15,7.5"
+                - Tag:
+                      params: "--format3 10"
+                - SCB:
+                      params: ""
+                - Tag:
+                      params: "--format5 AAGCAGTGGTATCAACGCAGAGTACATGGG --format3 AGATCGGAAGAGCGTCGTGTAG"
+                - PCR:
+                      params: "--cycles 5 --molecule-count 5000000 -x Taq-setting1"
+                - Flp:
+                      params: "-p 0.5"
+                - Tag:
+                      params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
+                - Trc:
+                      params: ""
+                      model: MCF7
+                - Shf:
+                      params: ""
+                - Seq:
+                      params: "--skip-qual-compute"
+        D125:
+            pipeline:
+                - Tsb:
+                      params: "--molecule-count 125000 --molecule-prefix D125: -s 125"
+                      model: D125
+        E60:
+            pipeline:
+                - Tsb:
+                      params: "--molecule-count 60000 --molecule-prefix E60: -s 60"
+                      model: E60
         A250:
             pipeline:
                 - Tsb:
@@ -295,6 +330,10 @@ TKSM:
                 sample: HepG2
                 cb-txt: 10x
                 params: "--cb-count 1000  --cb-dropout 0.0 --random-seed 1003"
+            D125:
+                sample: K562
+                cb-txt: 10x
+                params: "--cb-count 125  --cb-dropout 0.0 --random-seed 125"
             D250:
                 sample: K562
                 cb-txt: 10x
@@ -307,6 +346,10 @@ TKSM:
                 sample: K562
                 cb-txt: 10x
                 params: "--cb-count 1000  --cb-dropout 0.0 --random-seed 1004"
+            E60:
+                sample: MCF7
+                cb-txt: 10x
+                params: "--cb-count 60  --cb-dropout 0.0 --random-seed 60"
             E250:
                 sample: MCF7
                 cb-txt: 10x

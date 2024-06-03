@@ -104,6 +104,56 @@ TKSM:
                       params: ""
                 - Seq:
                       params: "--skip-qual-compute"
+        Expr4:
+            pipeline:
+                - Mrg:
+                      sources: ["A1000", "B1000", "C1000", "D1000", "E1000"]
+                - plA:
+                      params: "--normal=15,7.5"
+                - Tag:
+                      params: "--format3 10"
+                - SCB:
+                      params: ""
+                - Tag:
+                      params: "--format5 AAGCAGTGGTATCAACGCAGAGTACATGGG --format3 AGATCGGAAGAGCGTCGTGTAG"
+                - PCR:
+                      params: "--cycles 5 --molecule-count 5000000 -x Taq-setting1"
+                - Flp:
+                      params: "-p 0.5"
+                - Tag:
+                      params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
+                - Trc:
+                      params: ""
+                      model: MCF7
+                - Shf:
+                      params: ""
+                - Seq:
+                      params: "--skip-qual-compute"
+        Expr5:
+            pipeline:
+                - Mrg:
+                      sources: ["A250", "B250", "C250", "D250", "E250"]
+                - plA:
+                      params: "--normal=15,7.5"
+                - Tag:
+                      params: "--format3 10"
+                - SCB:
+                      params: ""
+                - Tag:
+                      params: "--format5 AAGCAGTGGTATCAACGCAGAGTACATGGG --format3 AGATCGGAAGAGCGTCGTGTAG"
+                - PCR:
+                      params: "--cycles 5 --molecule-count 5000000 -x Taq-setting1"
+                - Flp:
+                      params: "-p 0.5"
+                - Tag:
+                      params: "--format5 AATGTACTTCGTTCAGTTACGTATTGCT --format3 GCAATACGTAACTGAACGAAGT"
+                - Trc:
+                      params: ""
+                      model: MCF7
+                - Shf:
+                      params: ""
+                - Seq:
+                      params: "--skip-qual-compute"
         A250:
             pipeline:
                 - Tsb:

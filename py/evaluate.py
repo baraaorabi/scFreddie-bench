@@ -9,7 +9,7 @@ from tqdm import tqdm
 from matplotlib import pyplot as plt
 
 
-count_range = list(range(0, 51, 5))
+count_range = [3, 5, 9] + list(range(15, 51, 5))
 
 
 def parse_args():
@@ -190,9 +190,14 @@ def plot(curves, pdf, sample):
         axes[0].plot(count_range[: len(R_curve)], R_curve, label=tool, **kw)
         axes[1].plot(count_range[: len(P_curve)], P_curve, label=tool, **kw)
         axes[2].plot(count_range[: len(f1_curve)], f1_curve, label=tool, **kw)
+    for ax in axes:
+        ax.set_xticks(count_range)
+        ax.set_xticklabels(count_range)
+        ax.set_ylim(0, 1)
     fig.tight_layout()
     lgd = plt.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
     plt.savefig(pdf, bbox_extra_artists=(lgd, txt), bbox_inches="tight")
+    plt.savefig(pdf[:-3] + "png", bbox_extra_artists=(lgd, txt), bbox_inches="tight")
 
 
 def set_truth_df(tsv):

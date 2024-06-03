@@ -154,6 +154,7 @@ rule expression:
         filtered_barcode_list=f"{output_d}/{{sample}}_r{{rate}}/filtered_barcode_list.txt",
     params:
         d=f"{output_d}/{{sample}}_r{{rate}}",
+        min_gene_no=1,
     threads: 32
     conda:
         "envs/scnanogps.yaml"
@@ -166,7 +167,7 @@ rule expression:
         " -d {params.d}"
         " --gtf {input.gtf}"
         " --tmp_dir {input.tmp_dir}"
-        " --min_gene_no 1"
+        " --min_gene_no {params.min_gene_no}"
         " -t {threads}"
 
 

@@ -173,15 +173,22 @@ rule evaluate:
         tsvs=[f"{output_d}/post/{{sample}}/{t}.tsv" for t in tool_names],
         truth=f"{output_d}/post/{{sample}}/truth.tsv",
     output:
-        pdf=f"{output_d}/eval/{{sample}}.pdf",
-        tsv=f"{output_d}/eval/{{sample}}.tsv",
+        [
+            f"{output_d}/eval/{{sample}}.{ext}"
+            for ext in [
+                "pdf",
+                "tsv",
+                "png",
+                "svg",
+            ]
+        ],
     params:
         names=tool_names,
+        outprefix=f"{output_d}/eval/{{sample}}",
     shell:
         "python {input.script}"
         " -sample {wildcards.sample}"
         " -tsvs {input.tsvs}"
         " -truth {input.truth}"
         " -names {params.names}"
-        " -pdf {output.pdf}"
-        " -tsv {output.tsv}"
+        " -out {params.outprefix}"

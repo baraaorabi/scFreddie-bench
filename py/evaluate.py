@@ -41,16 +41,10 @@ def parse_args():
         help="Tool names",
     )
     parser.add_argument(
-        "-tsv",
+        "-out",
         type=str,
         required=True,
-        help="Output TSV",
-    )
-    parser.add_argument(
-        "-pdf",
-        type=str,
-        required=True,
-        help="Output PDF",
+        help="Output filename prefix. Will generate <output>.tsv, <output>.pdf, <output>.png, and <output>.svg",
     )
 
     args = parser.parse_args()
@@ -127,11 +121,12 @@ def main():
     set_truth_df(args.truth)
     pred_dfs = get_pred_dfs(args.tsvs, args.names)
     curves = get_curves(pred_dfs)
-    output_curves(curves, args.tsv)
-    plot(curves, args.pdf, args.sample)
+    output_curves(curves, args.out)
+    plot(curves, args.out, args.sample)
 
 
-def output_curves(curves, tsv):
+def output_curves(curves, outprefix):
+    tsv = outprefix + ".tsv"
     with open(tsv, "w") as f:
         f.write("tool\tmin_count\trecall\tprecision\tf1\n")
         for tool, (R_curve, P_curve, f1_curve) in curves.items():
@@ -175,7 +170,7 @@ def get_curves(pred_dfs):
     return curves
 
 
-def plot(curves, pdf, sample):
+def plot(curves, outprefix, sample):
     fig, axes = plt.subplots(1, 3, figsize=(10, 3), sharey=True)
     txt = fig.suptitle(f"Evaluation for {sample}")
     axes[0].set_xlabel("Min truth count")
@@ -196,8 +191,12 @@ def plot(curves, pdf, sample):
         ax.set_ylim(0, 1)
     fig.tight_layout()
     lgd = plt.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
-    plt.savefig(pdf, bbox_extra_artists=(lgd, txt), bbox_inches="tight")
-    plt.savefig(pdf[:-3] + "png", bbox_extra_artists=(lgd, txt), bbox_inches="tight")
+    for ext in ["pdf", "png", "svg"]:
+        plt.savefig(
+            f"{outprefix}.{ext}",
+            bbox_extra_artists=(lgd, txt),
+            bbox_inches="tight",
+        )
 
 
 def set_truth_df(tsv):

@@ -4,6 +4,7 @@ tints/
 .snakemake/
 slurm_logs/
 .vscode/
+dev.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

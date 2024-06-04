@@ -1,11 +1,11 @@
 outpath: output
 
 ref_sample_rates:
-    - "0.01"
-    - "0.25"
-    - "0.50"
-    - "0.75"
     - "1.00"
+    - "0.75"
+    - "0.50"
+    - "0.25"
+    - "0.01"
 
 freddie:
     exec: extern/freddie/freddie.py

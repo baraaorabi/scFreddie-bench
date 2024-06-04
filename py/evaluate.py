@@ -115,27 +115,89 @@ def get_intronic_matches(pred_record):
     return tidxs
 
 
-def main():
-    args = parse_args()
+def set_truth_df(tsv):
+    global truth_df, truth_cg
+    truth_df = parse_tsv(tsv)
 
-    set_truth_df(args.truth)
-    pred_dfs = get_pred_dfs(args.tsvs, args.names)
-    curves = get_curves(pred_dfs)
-    output_curves(curves, args.out)
-    plot(curves, args.out, args.sample)
+    truth_cg = cgranges.cgranges()
+    for idx, (contig, intervals, cell_type) in enumerate(
+        zip(
+            truth_df["contig"],
+            truth_df["intervals"],
+            truth_df["cell_type"],
+        )
+    ):
+        for start, end in intervals:
+            truth_cg.add(f"{cell_type}-{contig}", start, end, idx)
+    truth_cg.index()
 
 
-def output_curves(curves, outprefix):
-    tsv = outprefix + ".tsv"
-    with open(tsv, "w") as f:
-        f.write("tool\tmin_count\trecall\tprecision\tf1\n")
-        for tool, (R_curve, P_curve, f1_curve) in curves.items():
-            for idx, min_count in enumerate(count_range):
-                r = "NA" if idx >= len(R_curve) else f"{R_curve[idx]:.2f}"
-                p = "NA" if idx >= len(P_curve) else f"{P_curve[idx]:.2f}"
-                f1 = "NA" if idx >= len(f1_curve) else f"{f1_curve[idx]:.2f}"
-                f.write(f"{tool}\t{min_count}\t{r}\t{p}\t{f1}\n")
-        f.close()
+def get_pred_dfs(tsvs, names):
+    pred_dfs = dict()
+    for tool, tsv in tqdm(zip(names, tsvs), total=len(tsvs), desc="Parsing TSVs"):
+        if tool == "truth":
+            continue
+        try:
+            pred_df = parse_tsv(tsv)
+            pred_df["hits"] = pred_df.apply(get_intronic_matches, axis=1)
+        except:
+            continue
+        pred_dfs[tool] = pred_df
+    return pred_dfs
+
+
+def plot(curves, outprefix, sample):
+    fig, axes = plt.subplots(1, 3, figsize=(10, 3), sharey=True)
+    txt = fig.suptitle(f"Evaluation for {sample}")
+    axes[0].set_xlabel("Min truth count")
+    axes[0].set_ylabel("Recall")
+    axes[1].set_xlabel("Min tool support")
+    axes[1].set_ylabel("Precision")
+    axes[2].set_xlabel("Min truth count and tool support")
+    axes[2].set_ylabel("F1 score")
+
+    for tool, (R_curve, P_curve, f1_curve) in curves.items():
+        kw = styling(tool)
+        axes[0].plot(count_range[: len(R_curve)], R_curve, label=tool, **kw)
+        axes[1].plot(count_range[: len(P_curve)], P_curve, label=tool, **kw)
+        axes[2].plot(count_range[: len(f1_curve)], f1_curve, label=tool, **kw)
+    for ax in axes:
+        ax.set_xticks(count_range)
+        ax.set_xticklabels(count_range)
+        ax.set_ylim(0, 1)
+    fig.tight_layout()
+    lgd = plt.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
+    for ext in ["pdf", "png", "svg"]:
+        plt.savefig(
+            f"{outprefix}.{ext}",
+            bbox_extra_artists=(lgd, txt),
+            bbox_inches="tight",
+        )
+
+
+def styling(tool):
+    D = dict()
+    if tool == "scFreddie":
+        D["linestyle"] = "-."
+        D["marker"] = "s"
+        D["color"] = "#1b9e77"
+        D["zorder"] = 3
+    elif tool.startswith("scNanoGPS"):
+        D["linestyle"] = "-"
+        D["marker"] = "x"
+        D["color"] = "#d95f02"
+        D["zorder"] = 2
+        r = float(tool.split("_")[1][1:])
+        D["alpha"] = 0.4 + 0.6 * (r - 0.01) / 0.99
+    elif tool.startswith("FLAMES"):
+        D["linestyle"] = "--"
+        D["marker"] = "o"
+        D["color"] = "#7570b3"
+        D["zorder"] = 1
+        r = float(tool.split("_")[1][1:])
+        D["alpha"] = 0.4 + 0.6 * (r - 0.01) / 0.99
+    D["markersize"] = 3
+    return D
 
 
 def get_curves(pred_dfs):
@@ -170,89 +232,27 @@ def get_curves(pred_dfs):
     return curves
 
 
-def plot(curves, outprefix, sample):
-    fig, axes = plt.subplots(1, 3, figsize=(10, 3), sharey=True)
-    txt = fig.suptitle(f"Evaluation for {sample}")
-    axes[0].set_xlabel("Min truth count")
-    axes[0].set_ylabel("Recall")
-    axes[1].set_xlabel("Min tool support")
-    axes[1].set_ylabel("Precision")
-    axes[2].set_xlabel("Min truth count and tool support")
-    axes[2].set_ylabel("F1 score")
-
-    for tool, (R_curve, P_curve, f1_curve) in curves.items():
-        kw = styling(tool)
-        axes[0].plot(count_range[: len(R_curve)], R_curve, label=tool, **kw)
-        axes[1].plot(count_range[: len(P_curve)], P_curve, label=tool, **kw)
-        axes[2].plot(count_range[: len(f1_curve)], f1_curve, label=tool, **kw)
-    for ax in axes:
-        ax.set_xticks(count_range)
-        ax.set_xticklabels(count_range)
-        ax.set_ylim(0, 1)
-    fig.tight_layout()
-    lgd = plt.legend(loc="center left", bbox_to_anchor=(1.05, 0.5))
-    for ext in ["pdf", "png", "svg"]:
-        plt.savefig(
-            f"{outprefix}.{ext}",
-            bbox_extra_artists=(lgd, txt),
-            bbox_inches="tight",
-        )
+def output_curves(curves, outprefix):
+    tsv = outprefix + ".tsv"
+    with open(tsv, "w") as f:
+        f.write("tool\tmin_count\trecall\tprecision\tf1\n")
+        for tool, (R_curve, P_curve, f1_curve) in curves.items():
+            for idx, min_count in enumerate(count_range):
+                r = "NA" if idx >= len(R_curve) else f"{R_curve[idx]:.2f}"
+                p = "NA" if idx >= len(P_curve) else f"{P_curve[idx]:.2f}"
+                f1 = "NA" if idx >= len(f1_curve) else f"{f1_curve[idx]:.2f}"
+                f.write(f"{tool}\t{min_count}\t{r}\t{p}\t{f1}\n")
+        f.close()
 
 
-def set_truth_df(tsv):
-    global truth_df, truth_cg
-    truth_df = parse_tsv(tsv)
+def main():
+    args = parse_args()
 
-    truth_cg = cgranges.cgranges()
-    for idx, (contig, intervals, cell_type) in enumerate(
-        zip(
-            truth_df["contig"],
-            truth_df["intervals"],
-            truth_df["cell_type"],
-        )
-    ):
-        for start, end in intervals:
-            truth_cg.add(f"{cell_type}-{contig}", start, end, idx)
-    truth_cg.index()
-
-
-def get_pred_dfs(tsvs, names):
-    pred_dfs = dict()
-    for tool, tsv in tqdm(zip(names, tsvs), total=len(tsvs), desc="Parsing TSVs"):
-        if tool == "truth":
-            continue
-        try:
-            pred_df = parse_tsv(tsv)
-            pred_df["hits"] = pred_df.apply(get_intronic_matches, axis=1)
-        except:
-            continue
-        pred_dfs[tool] = pred_df
-    return pred_dfs
-
-
-def styling(tool):
-    D = dict()
-    if tool.startswith("freddie"):
-        D["linestyle"] = "-."
-        D["marker"] = "s"
-        D["color"] = "#1b9e77"
-        D["zorder"] = 3
-    elif tool.startswith("scNanoGPS"):
-        D["linestyle"] = "-"
-        D["marker"] = "x"
-        D["color"] = "#d95f02"
-        D["zorder"] = 2
-        r = float(tool.split("_")[1][1:])
-        D["alpha"] = 0.4 + 0.6 * (r - 0.01) / 0.99
-    elif tool.startswith("FLAMES"):
-        D["linestyle"] = "--"
-        D["marker"] = "o"
-        D["color"] = "#7570b3"
-        D["zorder"] = 1
-        r = float(tool.split("_")[1][1:])
-        D["alpha"] = 0.4 + 0.6 * (r - 0.01) / 0.99
-    D["markersize"] = 3
-    return D
+    set_truth_df(args.truth)
+    pred_dfs = get_pred_dfs(args.tsvs, args.names)
+    curves = get_curves(pred_dfs)
+    output_curves(curves, args.out)
+    plot(curves, args.out, args.sample)
 
 
 if __name__ == "__main__":

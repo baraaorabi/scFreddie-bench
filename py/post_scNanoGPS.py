@@ -120,7 +120,7 @@ def get_cb_to_cts(cb_to_celltypes: str) -> tuple[dict[str, set[str]], list[str]]
     cb_to_cts: dict[str, set[str]] = dict()
     CT_set = {"N"}
     for line in tqdm(open(cb_to_celltypes), desc=f"Reading {cb_to_celltypes}"):
-        cb, cts = line.rstrip("\n").split("\t")
+        cb, cts = line.rstrip("\n").split()
         cts = set(cts.split(","))
         CT_set.update(cts)
         cb_rc = rev_compl(cb)

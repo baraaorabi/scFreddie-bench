@@ -93,7 +93,7 @@ def get_overlaps(pred_record):
     return sorted(tidxs)
 
 
-def fuzzy_match(A, B, slack=20):
+def fuzzy_match(A, B, slack=5):
     if len(A) != len(B):
         return False
     for (A_s, A_e), (B_s, B_e) in zip(A, B):

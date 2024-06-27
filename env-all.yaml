@@ -30,6 +30,7 @@ dependencies:
   - seaborn=0.11.2
   - snakemake>=6.0.0
   - spoa=4.1.4
+  - star=2.7.11b
   - subread=2.0.6
   - tabix=1.11
   - time=1.8

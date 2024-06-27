@@ -86,7 +86,7 @@ def generate_introns(
         yield (e1, s2)
 
 
-def close_enough(t_intron, r_intron, slack=10):
+def close_enough(t_intron, r_intron, slack=5):
     t_start, t_end = t_intron
     r_start, r_end = r_intron
     if abs(t_start - r_start) > slack:

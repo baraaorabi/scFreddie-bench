@@ -84,7 +84,7 @@ def process_gtf(gtf: str) -> tuple[
 def get_cts(cb_to_celltypes: str) -> list[str]:
     CT_set = {"N"}
     for line in tqdm(open(cb_to_celltypes), desc=f"Reading {cb_to_celltypes}"):
-        _, cts = line.rstrip("\n").split("\t")
+        _, cts = line.rstrip("\n").split()
         cts = set(cts.split(","))
         CT_set.update(cts)
     CTs = sorted(CT_set)

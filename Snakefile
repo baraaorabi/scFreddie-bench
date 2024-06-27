@@ -183,7 +183,7 @@ rule evaluate:
             ]
         ],
     params:
-        names=tool_names,
+        names=["scFreddie" if n == "freddie" else n for n in tool_names],
         outprefix=f"{output_d}/eval/{{sample}}",
     shell:
         "python {input.script}"
